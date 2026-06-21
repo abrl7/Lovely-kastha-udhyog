@@ -1,0 +1,48 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #F7F1E6;
+  color: #2B2620;
+}
+
+/* signature wood-grain divider band */
+.grain-band {
+  background-image: repeating-linear-gradient(
+    90deg,
+    #4A3528 0px,
+    #4A3528 2px,
+    #3d2c20 2px,
+    #3d2c20 4px,
+    #4A3528 4px,
+    #4A3528 40px
+  );
+}
+
+/* horizontal category scroller */
+.cat-scroll {
+  scroll-snap-type: x mandatory;
+}
+.cat-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+.cat-scroll::-webkit-scrollbar-thumb {
+  background: #A8854F;
+  border-radius: 3px;
+}
+.cat-card {
+  scroll-snap-align: start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+    scroll-behavior: auto !important;
+  }
+}

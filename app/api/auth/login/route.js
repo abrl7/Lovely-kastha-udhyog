@@ -64,8 +64,13 @@ export async function POST(request) {
       tokenHash,
       expiresAt: new Date(Date.now() + SESSION_DURATION_MS),
     });
+<<<<<<< HEAD
 
     cookies().set(
+=======
+const cookieStore= await cookies()
+    cookieStore.set(
+>>>>>>> 4d4ae4a33e2b7a2a33076289f7660c0f9c2494e9
       SESSION_COOKIE_NAME,
       rawToken,
       getSessionCookieOptions()

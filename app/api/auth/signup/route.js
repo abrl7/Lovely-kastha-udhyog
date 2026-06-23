@@ -88,11 +88,21 @@ export async function POST(request) {
       expiresAt: new Date(Date.now() + SESSION_DURATION_MS),
     });
 
+<<<<<<< HEAD
     cookies().set(
       SESSION_COOKIE_NAME,
       rawToken,
       getSessionCookieOptions()
     );
+=======
+   const cookieStore = await cookies();
+
+cookieStore.set(
+  SESSION_COOKIE_NAME,
+  rawToken,
+  getSessionCookieOptions()
+);
+>>>>>>> 4d4ae4a33e2b7a2a33076289f7660c0f9c2494e9
 
     // Deliberately exclude passwordHash from the response even though we
     // never selected it (select: false on the schema already prevents

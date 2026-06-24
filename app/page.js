@@ -7,15 +7,21 @@ import Story from "@/components/Story";
 import Process from "@/components/Process";
 import Inquiry from "@/components/Inquiry";
 import Footer from "@/components/Footer";
+import { getFeaturedProducts } from "@/lib/data";
 
-export default function HomePage() {
+// This is a server component (no "use client") — it runs on the server
+// at request time and can call the database directly via getFeaturedProducts().
+// The fetched data is passed as props to child components that need it.
+export default async function HomePage() {
+  const featuredProducts = await getFeaturedProducts();
+
   return (
     <main>
       <Header />
       <Hero />
       <GrainBand />
       <Categories />
-      <Featured />
+      <Featured products={featuredProducts} />
       <Story />
       <Process />
       <Inquiry />

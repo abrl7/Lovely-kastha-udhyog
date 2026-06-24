@@ -8,11 +8,7 @@ export async function POST() {
   try {
     await connectDB();
 
-<<<<<<< HEAD
     const cookieStore = cookies();
-=======
-    const cookieStore = await cookies();
->>>>>>> 4d4ae4a33e2b7a2a33076289f7660c0f9c2494e9
     const rawToken = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
     if (rawToken) {
@@ -33,10 +29,6 @@ export async function POST() {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("POST /api/auth/logout error:", error);
-<<<<<<< HEAD
-=======
-    console.error("LOGOUT ERROR:", error);
->>>>>>> 4d4ae4a33e2b7a2a33076289f7660c0f9c2494e9
     return NextResponse.json(
       { success: false, error: "Logout failed" },
       { status: 500 }

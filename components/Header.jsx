@@ -3,6 +3,7 @@ import Link from "next/link";
 const NAV_LINKS = [
   { label: "Ready-Made", href: "/catalog" },
   { label: "Custom Order", href: "/custom" },
+  { label: "Track Order", href: "/track" },
   { label: "Our Story", href: "/#story" },
   { label: "Contact", href: "/#inquiry" },
 ];

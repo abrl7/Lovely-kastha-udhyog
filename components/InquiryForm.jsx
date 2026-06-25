@@ -37,6 +37,7 @@ export default function InquiryForm() {
   // "loading AND success at the same time" that separate booleans allow.
   const [submitStatus, setSubmitStatus] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const [confirmedOrder, setConfirmedOrder] = useState(null); // stores { orderCode } from API response
 
   function handleChange(e) {
     const { id, value } = e.target;
@@ -80,6 +81,7 @@ export default function InquiryForm() {
       }
 
       setSubmitStatus("success");
+      setConfirmedOrder({ orderCode: result.data.orderCode });
       setFormData(initialFormState);
     } catch (error) {
       console.error("Order submission failed:", error);
@@ -107,18 +109,41 @@ export default function InquiryForm() {
           <h3 className="font-serif text-[1.4rem] text-walnut-deep mb-3">
             Inquiry received
           </h3>
-          <p className="text-[0.95rem] text-charcoal/80 mb-4">
-            Thanks — we&apos;ve got your request and will reach out soon.
-            Keep your phone number handy if you&apos;d like to check on
-            your order later.
+          <p className="text-[0.95rem] text-charcoal/80 mb-5">
+            Thanks — we&apos;ve got your request and will be in touch soon.
           </p>
-          <button
-            type="button"
-            onClick={() => setSubmitStatus("idle")}
-            className="text-[0.85rem] font-semibold text-sienna hover:text-sienna-dark underline"
+
+          {confirmedOrder && (
+            <div className="bg-white border border-walnut/15 rounded-sm p-4 mb-5">
+              <p className="text-[0.72rem] font-semibold tracking-[0.08em] uppercase text-charcoal/40 mb-1">
+                Your Order Code
+              </p>
+              <p className="font-serif text-2xl text-walnut-deep font-medium tracking-wide">
+                {confirmedOrder.orderCode}
+              </p>
+              <p className="text-xs text-charcoal/50 mt-1">
+                Save this code — you&apos;ll need it along with your phone
+                number to track your order.
+              </p>
+            </div>
+          )}
+
+          <a
+            href="/track"
+            className="inline-block bg-sienna text-cream-soft font-semibold text-[0.88rem] px-5 py-2.5 rounded-sm hover:bg-sienna-dark transition-colors duration-200 mb-4"
           >
-            Submit another inquiry
-          </button>
+            Track your order →
+          </a>
+
+          <div>
+            <button
+              type="button"
+              onClick={() => { setSubmitStatus("idle"); setConfirmedOrder(null); }}
+              className="text-[0.85rem] font-semibold text-sienna hover:text-sienna-dark underline"
+            >
+              Submit another inquiry
+            </button>
+          </div>
         </div>
       </div>
     );

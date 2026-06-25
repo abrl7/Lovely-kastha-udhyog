@@ -216,7 +216,12 @@ export async function GET(request) {
       );
     }
 
-    return NextResponse.json({ success: true, data: order });
+    // Convert to plain object and strip internalNotes — that field is
+    // for your dad's eyes only and should never reach a customer's browser.
+    const orderData = order.toObject();
+    delete orderData.internalNotes;
+
+    return NextResponse.json({ success: true, data: orderData });
   } catch (error) {
     console.error("GET /api/orders error:", error);
     return NextResponse.json(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const CATEGORIES = [
   { value: "living_room", label: "Living Room" },
@@ -43,9 +43,10 @@ function productToFormState(product) {
 
 export default function ProductForm({ mode, product, onClose, onSaved }) {
   const [form, setForm] = useState(emptyForm);
-  const [newImageUrl, setNewImageUrl] = useState("");
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false); // separate from saving — tracks image upload in progress
   const [error, setError] = useState("");
+  const fileInputRef = useRef(null); // ref to the hidden file input so we can trigger it from a styled button
 
   // When switching between edit targets (or add→edit), reset the form.
   useEffect(() => {
@@ -65,16 +66,6 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
     }));
   }
 
-  function addImage() {
-    const url = newImageUrl.trim();
-    if (!url) return;
-    setForm((prev) => ({
-      ...prev,
-      images: [...prev.images, { url, sortOrder: prev.images.length }],
-    }));
-    setNewImageUrl("");
-  }
-
   function removeImage(index) {
     setForm((prev) => ({
       ...prev,
@@ -82,6 +73,55 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
         .filter((_, i) => i !== index)
         .map((img, i) => ({ ...img, sortOrder: i })),
     }));
+  }
+
+  async function handleFileUpload(e) {
+    const files = Array.from(e.target.files);
+    if (!files.length) return;
+
+    setUploading(true);
+    setError("");
+
+    // Upload each selected file sequentially (not parallel) to avoid
+    // hammering the server with simultaneous requests. For a typical
+    // product with 3-5 photos this is fast enough; parallel would add
+    // complexity for minimal real benefit here.
+    for (const file of files) {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/admin/upload", {
+          method: "POST",
+          body: formData,
+          // DO NOT set Content-Type header manually — the browser must
+          // set it automatically so it includes the multipart boundary
+          // string. Setting it manually breaks the multipart parsing.
+        });
+
+        const result = await res.json();
+
+        if (!result.success) {
+          throw new Error(result.error || "Upload failed");
+        }
+
+        // Append the returned Cloudinary URL to the images array.
+        setForm((prev) => ({
+          ...prev,
+          images: [
+            ...prev.images,
+            { url: result.data.url, sortOrder: prev.images.length },
+          ],
+        }));
+      } catch (err) {
+        setError(`Failed to upload "${file.name}": ${err.message}`);
+        break; // stop uploading remaining files if one fails
+      }
+    }
+
+    setUploading(false);
+    // Reset the file input so the same file can be selected again if needed
+    if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
   async function handleSubmit(e) {
@@ -131,6 +171,9 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
     }
   }
 
+  // Block form interactions while either saving or uploading an image
+  const isBusy = saving || uploading;
+
   const fieldLabel =
     "block text-[0.72rem] font-semibold tracking-[0.04em] uppercase text-charcoal/50 mb-1";
   const fieldInput =
@@ -164,7 +207,7 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
             required
             value={form.name}
             onChange={handleChange}
-            disabled={saving}
+            disabled={isBusy}
             className={fieldInput}
             placeholder="e.g. Heritage Sofa Set"
           />
@@ -180,7 +223,7 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
               id="listingType"
               value={form.listingType}
               onChange={handleChange}
-              disabled={saving}
+              disabled={isBusy}
               className={fieldInput}
             >
               <option value="reference_only">Reference / Portfolio</option>
@@ -195,7 +238,7 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
               id="category"
               value={form.category}
               onChange={handleChange}
-              disabled={saving}
+              disabled={isBusy}
               className={fieldInput}
             >
               {CATEGORIES.map((c) => (
@@ -217,7 +260,7 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
             type="text"
             value={form.woodType}
             onChange={handleChange}
-            disabled={saving}
+            disabled={isBusy}
             className={fieldInput}
             placeholder="e.g. Sheesham, Teak, Sal"
           />
@@ -232,7 +275,7 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
             id="description"
             value={form.description}
             onChange={handleChange}
-            disabled={saving}
+            disabled={isBusy}
             rows={3}
             className={`${fieldInput} resize-none`}
             placeholder="Brief description of the piece…"
@@ -251,7 +294,7 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
               min="0"
               value={form.priceMin}
               onChange={handleChange}
-              disabled={saving}
+              disabled={isBusy}
               className={fieldInput}
               placeholder="e.g. 25000"
             />
@@ -266,7 +309,7 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
               min="0"
               value={form.priceMax}
               onChange={handleChange}
-              disabled={saving}
+              disabled={isBusy}
               className={fieldInput}
               placeholder="e.g. 35000"
             />
@@ -288,7 +331,7 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
               min="0"
               value={form.stockQuantity}
               onChange={handleChange}
-              disabled={saving}
+              disabled={isBusy}
               className={fieldInput}
             />
           </div>
@@ -301,7 +344,7 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
             type="checkbox"
             checked={form.isFeatured}
             onChange={handleChange}
-            disabled={saving}
+            disabled={isBusy}
             className="w-4 h-4 accent-sienna cursor-pointer"
           />
           <label htmlFor="isFeatured" className="text-sm text-charcoal cursor-pointer">
@@ -312,17 +355,19 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
         {/* Images */}
         <div>
           <p className={fieldLabel}>Images</p>
+
+          {/* Uploaded images list */}
           {form.images.length > 0 && (
-            <div className="space-y-2 mb-2">
+            <div className="space-y-2 mb-3">
               {form.images.map((img, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-2 bg-cream rounded-sm px-3 py-2"
+                  className="flex items-center gap-3 bg-cream rounded-sm px-3 py-2"
                 >
                   <img
                     src={img.url}
                     alt=""
-                    className="w-10 h-10 object-cover rounded-sm flex-none"
+                    className="w-12 h-12 object-cover rounded-sm flex-none"
                     onError={(e) => { e.target.style.display = "none"; }}
                   />
                   <span className="text-xs text-charcoal/60 flex-1 truncate">
@@ -331,7 +376,8 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
                   <button
                     type="button"
                     onClick={() => removeImage(i)}
-                    className="text-xs text-red-500 hover:text-red-700 font-semibold flex-none"
+                    disabled={isBusy}
+                    className="text-xs text-red-500 hover:text-red-700 font-semibold flex-none disabled:opacity-50"
                   >
                     Remove
                   </button>
@@ -339,28 +385,46 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
               ))}
             </div>
           )}
-          <div className="flex gap-2">
-            <input
-              type="url"
-              value={newImageUrl}
-              onChange={(e) => setNewImageUrl(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addImage(); } }}
-              disabled={saving}
-              className={`${fieldInput} flex-1`}
-              placeholder="Paste image URL and press Add"
-            />
-            <button
-              type="button"
-              onClick={addImage}
-              disabled={saving || !newImageUrl.trim()}
-              className="text-sm font-semibold px-3 py-2 border border-walnut/25 rounded-sm text-walnut hover:bg-cream transition-colors disabled:opacity-50"
-            >
-              Add
-            </button>
-          </div>
-          <p className="text-[0.72rem] text-charcoal/40 mt-1">
-            For now, paste Unsplash or hosted image URLs. File upload (Cloudinary) comes in a later step.
-          </p>
+
+          {/* Hidden file input triggered by the styled button below.
+              `multiple` allows selecting several photos at once. */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleFileUpload}
+            className="hidden"
+            aria-label="Upload product images"
+          />
+
+          {/* Styled upload trigger */}
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isBusy}
+            className={`w-full border-[2px] border-dashed rounded-sm py-5 text-sm font-medium transition-colors duration-150 disabled:opacity-50 ${
+              uploading
+                ? "border-brass/50 text-brass bg-brass/5"
+                : "border-walnut/20 text-charcoal/50 hover:border-walnut/40 hover:text-charcoal/70 hover:bg-cream/50"
+            }`}
+          >
+            {uploading ? (
+              <span className="flex items-center justify-center gap-2">
+                <span className="inline-block w-3 h-3 border-2 border-brass border-t-transparent rounded-full animate-spin" />
+                Uploading to Cloudinary…
+              </span>
+            ) : (
+              <span>
+                {form.images.length === 0
+                  ? "Click to upload images"
+                  : "Click to add more images"}
+                <span className="block text-xs mt-0.5 font-normal">
+                  JPG, PNG, WebP · Max 5MB each · Multiple files OK
+                </span>
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Error */}
@@ -374,10 +438,12 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
         <div className="flex gap-3 pt-1">
           <button
             type="submit"
-            disabled={saving}
+            disabled={isBusy}
             className="flex-1 bg-sienna text-cream-soft font-semibold text-sm py-2.5 rounded-sm hover:bg-sienna-dark transition-colors duration-200 disabled:opacity-60"
           >
-            {saving
+            {uploading
+              ? "Uploading image…"
+              : saving
               ? "Saving..."
               : mode === "add"
               ? "Add Product"
@@ -386,7 +452,7 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
           <button
             type="button"
             onClick={onClose}
-            disabled={saving}
+            disabled={isBusy}
             className="px-4 py-2.5 text-sm font-semibold border border-walnut/25 text-charcoal/70 rounded-sm hover:bg-cream transition-colors"
           >
             Cancel

@@ -13,12 +13,18 @@ export default function Story() {
       className="bg-walnut-deep text-cream grid md:grid-cols-2 items-center gap-16 py-[7rem] px-[6vw]"
     >
       <div className="relative h-[320px] md:h-[480px] rounded-sm overflow-hidden order-2 md:order-1">
-        <Image
+        {/* <Image
           src="https://images.unsplash.com/photo-1565374881-b8fc7f6a3a8b?w=700&q=80"
           alt="Carpenter working wood"
           fill
           className="object-cover saturate-[1.05]"
-        />
+        /> */}
+        {<Image
+  src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=700&q=80"
+  width={700}
+  height={500}
+  alt="Furniture"
+/>}
       </div>
       <div className="order-1 md:order-2">
         <span className="text-[0.72rem] font-semibold tracking-[0.18em] uppercase text-brass">

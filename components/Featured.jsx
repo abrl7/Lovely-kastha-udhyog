@@ -2,12 +2,12 @@ import Image from "next/image";
 import Link from "next/link";
 
 // Grid layout classes for up to 4 products in the asymmetric layout.
-// The first product gets the large "hero" slot, the rest fill in smaller.
+// On mobile: simple full-width stacked cards. On md+: asymmetric grid.
 const GRID_CLASSES = [
-  "col-span-6 md:col-span-3 row-span-2 h-[320px] md:h-auto",
-  "col-span-6 md:col-span-3 h-[320px] md:h-[320px]",
-  "col-span-6 md:col-span-2 h-[320px] md:h-[220px]",
-  "col-span-6 md:col-span-1 h-[320px] md:h-[220px]",
+  "col-span-6 md:col-span-3 h-[260px] sm:h-[320px] md:row-span-2 md:h-auto",
+  "col-span-6 md:col-span-3 h-[260px] sm:h-[320px] md:h-[320px]",
+  "col-span-6 md:col-span-2 h-[260px] sm:h-[320px] md:h-[220px]",
+  "col-span-6 md:col-span-1 h-[260px] sm:h-[320px] md:h-[220px]",
 ];
 
 // Fallback placeholder tiles shown when no featured products exist yet
@@ -109,7 +109,7 @@ export default function Featured({ products = [] }) {
       </div>
 
       {!useFallback && (
-        <div className="mt-8 flex gap-4">
+        <div className="mt-8 flex flex-col sm:flex-row gap-3">
           <Link
             href="/catalog"
             className="inline-block font-semibold text-[0.85rem] tracking-[0.04em] px-[2rem] py-[0.85rem] rounded-sm bg-sienna text-cream-soft hover:bg-sienna-dark transition-colors duration-200"

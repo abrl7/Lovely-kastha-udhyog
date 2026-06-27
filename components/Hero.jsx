@@ -25,18 +25,20 @@ export default function Hero() {
           shortcuts, no particleboard — just solid wood and the patience to
           do it right.
         </p>
-        <a
-          href="#inquiry"
-          className="inline-block font-semibold text-[0.85rem] tracking-[0.04em] px-[2.1rem] py-[0.95rem] rounded-sm bg-sienna text-cream-soft hover:bg-sienna-dark transition-colors duration-200"
-        >
-          Request a Quote
-        </a>
-        <a
-          href="#featured"
-          className="inline-block font-semibold text-[0.85rem] tracking-[0.04em] px-[2.1rem] py-[0.95rem] rounded-sm border-[1.5px] border-cream-soft/50 text-cream-soft ml-[0.9rem] hover:border-cream-soft hover:bg-cream-soft/10 transition-colors duration-200"
-        >
-          See Our Work
-        </a>
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-0">
+          <a
+            href="#inquiry"
+            className="inline-block text-center font-semibold text-[0.85rem] tracking-[0.04em] px-[2.1rem] py-[0.95rem] rounded-sm bg-sienna text-cream-soft hover:bg-sienna-dark transition-colors duration-200"
+          >
+            Request a Quote
+          </a>
+          <a
+            href="#featured"
+            className="inline-block text-center font-semibold text-[0.85rem] tracking-[0.04em] px-[2.1rem] py-[0.95rem] rounded-sm border-[1.5px] border-cream-soft/50 text-cream-soft sm:ml-[0.9rem] hover:border-cream-soft hover:bg-cream-soft/10 transition-colors duration-200"
+          >
+            See Our Work
+          </a>
+        </div>
       </div>
     </section>
   );

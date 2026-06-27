@@ -131,9 +131,21 @@ export async function POST(request) {
     // the document, to keep the "count existing orders this year" window
     // as small as possible (reduces — doesn't eliminate — the race
     // condition described in generateOrderCode.js).
-    orderData.orderCode = await generateOrderCode();
-
-    const order = await Order.create(orderData);
+    // Retry up to 3 times on duplicate orderCode — handles the rare race
+    // condition where two simultaneous requests generate the same code.
+    let order;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      orderData.orderCode = await generateOrderCode();
+      try {
+        order = await Order.create(orderData);
+        break;
+      } catch (err) {
+        if (err.code === 11000 && err.keyPattern?.orderCode && attempt < 2) {
+          continue; // regenerate and retry
+        }
+        throw err; // non-duplicate error or exhausted retries
+      }
+    }
 
     // If this was a ready-made purchase, decrement stock. In a
     // high-traffic store you'd want this to happen atomically together

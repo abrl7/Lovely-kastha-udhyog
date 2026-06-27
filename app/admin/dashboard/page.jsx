@@ -136,6 +136,10 @@ export default function AdminOrdersPage() {
             order={selectedOrder}
             onClose={() => setSelectedOrderId(null)}
             onUpdate={fetchOrders}
+            onDelete={() => {
+              setSelectedOrderId(null);
+              fetchOrders();
+            }}
           />
         )}
       </div>

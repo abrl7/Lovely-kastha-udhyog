@@ -60,13 +60,9 @@ export async function PATCH(request, { params }) {
 }
 
 // DELETE /api/admin/products/:id
-// Soft delete only — sets isActive: false instead of removing the
-// document. Hard deleting would break any Order that references this
-// product via order.product or customDetails.referenceProduct. Those
-// orders would then have a dangling reference that .populate() can't
-// resolve, which causes errors in the order detail view. Soft delete
-// keeps the document (and the reference) intact while hiding it from
-// the public storefront.
+// Permanently removes the product. Use for products that no longer
+// exist in physical inventory. For temporarily unavailable products,
+// use PATCH with { isActive: false } to hide from storefront instead.
 export async function DELETE(request, { params }) {
   const admin = await getCurrentAdmin();
   if (!admin) {
@@ -79,11 +75,7 @@ export async function DELETE(request, { params }) {
   try {
     await connectDB();
 
-    const product = await Product.findByIdAndUpdate(
-      params.id,
-      { $set: { isActive: false } },
-      { new: true }
-    );
+    const product = await Product.findByIdAndDelete(params.id);
 
     if (!product) {
       return NextResponse.json(
@@ -94,13 +86,12 @@ export async function DELETE(request, { params }) {
 
     return NextResponse.json({
       success: true,
-      message: "Product deactivated successfully",
-      data: product,
+      message: "Product permanently deleted",
     });
   } catch (error) {
     console.error("DELETE /api/admin/products/:id error:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to deactivate product" },
+      { success: false, error: "Failed to delete product" },
       { status: 500 }
     );
   }

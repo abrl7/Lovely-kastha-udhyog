@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ORDER_STATUSES } from "@/lib/orderConstants";
 
-export default function OrderDetail({ order, onClose, onUpdate }) {
+export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
   const [status, setStatus] = useState(order.status);
   const [notes, setNotes] = useState(order.internalNotes || "");
   const [saving, setSaving] = useState(false);
@@ -216,6 +216,27 @@ export default function OrderDetail({ order, onClose, onUpdate }) {
         >
           {saving ? "Saving..." : "Save Changes"}
         </button>
+
+        {(order.status === "delivered" || order.status === "cancelled") && (
+          <button
+            onClick={async () => {
+              const confirmed = window.confirm(
+                `Permanently delete order ${order.orderCode}? This cannot be undone.`
+              );
+              if (!confirmed) return;
+              const res = await fetch(`/api/admin/orders/${order._id}`, { method: "DELETE" });
+              const result = await res.json();
+              if (result.success) {
+                onDelete();
+              } else {
+                alert("Failed to delete order: " + result.error);
+              }
+            }}
+            className="w-full text-red-600 border border-red-200 font-semibold text-sm py-2.5 rounded-sm hover:bg-red-50 transition-colors duration-200"
+          >
+            Delete Order
+          </button>
+        )}
       </div>
     </div>
   );

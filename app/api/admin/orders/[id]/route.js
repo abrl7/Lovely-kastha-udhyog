@@ -48,6 +48,40 @@ export async function GET(request, { params }) {
   }
 }
 
+// DELETE /api/admin/orders/:id
+// Permanently removes an order. Only appropriate for fully resolved
+// orders (delivered or cancelled) that are no longer needed.
+export async function DELETE(request, { params }) {
+  const admin = await getCurrentAdmin();
+  if (!admin) {
+    return NextResponse.json(
+      { success: false, error: "Authentication required" },
+      { status: 401 }
+    );
+  }
+
+  try {
+    await connectDB();
+
+    const order = await Order.findByIdAndDelete(params.id);
+
+    if (!order) {
+      return NextResponse.json(
+        { success: false, error: "Order not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json({ success: true, message: "Order deleted" });
+  } catch (error) {
+    console.error("DELETE /api/admin/orders/:id error:", error);
+    return NextResponse.json(
+      { success: false, error: "Failed to delete order" },
+      { status: 500 }
+    );
+  }
+}
+
 // PATCH /api/admin/orders/:id
 // Accepts: { status, internalNotes }
 // Both are optional — send only the fields you want to change.

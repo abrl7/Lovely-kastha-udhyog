@@ -7,7 +7,7 @@ const CATEGORY_LABELS = {
   other: "Other",
 };
 
-export default function ProductCard({ product, isSelected, onEdit, onToggleActive }) {
+export default function ProductCard({ product, isSelected, onEdit, onToggleActive, onDelete }) {
   const firstImage = product.images?.[0]?.url;
 
   const priceDisplay =
@@ -88,11 +88,17 @@ export default function ProductCard({ product, isSelected, onEdit, onToggleActiv
           onClick={onToggleActive}
           className={`text-xs font-semibold rounded-sm px-3 py-1.5 border transition-colors duration-150 ${
             product.isActive
-              ? "text-red-600 border-red-200 hover:bg-red-50"
+              ? "text-amber-600 border-amber-200 hover:bg-amber-50"
               : "text-green-700 border-green-200 hover:bg-green-50"
           }`}
         >
           {product.isActive ? "Deactivate" : "Reactivate"}
+        </button>
+        <button
+          onClick={onDelete}
+          className="text-xs font-semibold text-red-600 border border-red-200 rounded-sm px-3 py-1.5 hover:bg-red-50 transition-colors duration-150"
+        >
+          Delete
         </button>
       </div>
     </div>

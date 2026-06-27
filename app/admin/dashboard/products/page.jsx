@@ -49,20 +49,35 @@ export default function AdminProductsPage() {
   }
 
   async function handleToggleActive(product) {
-    const method = product.isActive ? "DELETE" : "PATCH";
-    const body = product.isActive ? null : JSON.stringify({ isActive: true });
-
     try {
       const res = await fetch(`/api/admin/products/${product._id}`, {
-        method,
-        headers: body ? { "Content-Type": "application/json" } : {},
-        body,
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !product.isActive }),
       });
       const result = await res.json();
       if (!result.success) throw new Error(result.error);
       fetchProducts();
     } catch (err) {
       alert("Failed to update product status: " + err.message);
+    }
+  }
+
+  async function handleDelete(product) {
+    const confirmed = window.confirm(
+      `Permanently delete "${product.name}"? This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(`/api/admin/products/${product._id}`, {
+        method: "DELETE",
+      });
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error);
+      fetchProducts();
+    } catch (err) {
+      alert("Failed to delete product: " + err.message);
     }
   }
 
@@ -123,6 +138,7 @@ export default function AdminProductsPage() {
                     isSelected={editingProduct?._id === p._id}
                     onEdit={() => handleEdit(p)}
                     onToggleActive={() => handleToggleActive(p)}
+                    onDelete={() => handleDelete(p)}
                   />
                 ))}
               </div>
@@ -143,6 +159,7 @@ export default function AdminProductsPage() {
                     isSelected={editingProduct?._id === p._id}
                     onEdit={() => handleEdit(p)}
                     onToggleActive={() => handleToggleActive(p)}
+                    onDelete={() => handleDelete(p)}
                   />
                 ))}
               </div>

@@ -120,10 +120,6 @@ export async function POST(request) {
   }
 }
 
-// Tell Next.js not to parse the body automatically — we need to handle
-// the multipart/form-data ourselves via request.formData().
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+// Use Node.js runtime for Cloudinary's upload_stream (requires Buffer/streams).
+// The App Router defaults to the Edge runtime which doesn't support Node APIs.
+export const runtime = "nodejs";

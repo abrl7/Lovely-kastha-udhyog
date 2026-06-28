@@ -79,6 +79,18 @@ const orderImageSchema = new mongoose.Schema(
   { _id: false }
 );
 
+// One entry in a measurements list — used both for customer rough estimates
+// and for admin-confirmed production specs. Keeping label free-text means
+// it works for any furniture type ("Drawer depth", "Glass thickness", etc.)
+const measurementEntrySchema = new mongoose.Schema(
+  {
+    label: { type: String, required: true, trim: true },
+    value: { type: String, required: true, trim: true },
+    unit:  { type: String, required: true, enum: ["cm", "inch", "ft", "mm"], default: "cm" },
+  },
+  { _id: false }
+);
+
 // Only populated when orderType is 'custom'. Kept as a nested object
 // rather than flattening these fields onto the top-level Order, so it's
 // visually and structurally clear which fields belong to the custom flow.
@@ -93,20 +105,27 @@ const customDetailsSchema = new mongoose.Schema(
       default: null,
     },
 
-    // Free text on purpose at this stage. Real intake conversations are
-    // loose ("about 6 feet, dark wood like teak") — forcing structured
-    // numeric fields (length, width, height + unit) too early would fight
-    // against how customers actually describe what they want. Revisit
-    // this once you see what data actually comes in through the form.
+    // Broad category of furniture — drives how measurements are labelled
+    // in the admin dashboard. Optional: customer may leave it as "other".
+    furnitureType: {
+      type: String,
+      enum: ["table", "wardrobe", "sofa", "bed", "chair", "shelf", "other"],
+      default: "other",
+    },
+
     description: {
       type: String,
       required: [true, "Please describe the custom piece you'd like"],
       trim: true,
     },
+
+    // Customer's rough size hint ("about 5 feet wide"). Optional — real
+    // measurements are confirmed by admin after the measurement visit.
     dimensions: {
       type: String,
       trim: true,
     },
+
     woodPreference: {
       type: String,
       trim: true,
@@ -114,6 +133,13 @@ const customDetailsSchema = new mongoose.Schema(
     budgetRange: {
       type: String,
       trim: true,
+    },
+
+    // Production-confirmed measurements set by admin after the on-site
+    // visit. Free-label key/value list so it works for any furniture type.
+    confirmedMeasurements: {
+      type: [measurementEntrySchema],
+      default: [],
     },
   },
   { _id: false }

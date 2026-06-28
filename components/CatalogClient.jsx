@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -11,6 +11,21 @@ const CATEGORIES = [
   { value: "dining", label: "Dining" },
   { value: "office", label: "Office" },
   { value: "other", label: "Other" },
+];
+
+const PRICE_RANGES = [
+  { value: "", label: "Any price" },
+  { value: "0-10000", label: "Under Rs. 10,000" },
+  { value: "10000-30000", label: "Rs. 10,000 – 30,000" },
+  { value: "30000-60000", label: "Rs. 30,000 – 60,000" },
+  { value: "60000-999999999", label: "Rs. 60,000+" },
+];
+
+const SORT_OPTIONS = [
+  { value: "default", label: "Default" },
+  { value: "price_asc", label: "Price: Low to High" },
+  { value: "price_desc", label: "Price: High to Low" },
+  { value: "name_asc", label: "Name: A – Z" },
 ];
 
 function ProductTile({ product }) {
@@ -72,30 +87,114 @@ function ProductTile({ product }) {
 
 export default function CatalogClient({ products }) {
   const [activeCategory, setActiveCategory] = useState("");
+  const [priceRange, setPriceRange]         = useState("");
+  const [sort, setSort]                     = useState("default");
 
-  const filtered =
-    activeCategory === ""
-      ? products
-      : products.filter((p) => p.category === activeCategory);
+  const filtered = useMemo(() => {
+    let result = [...products];
+
+    // Category
+    if (activeCategory) {
+      result = result.filter((p) => p.category === activeCategory);
+    }
+
+    // Price range
+    if (priceRange) {
+      const [min, max] = priceRange.split("-").map(Number);
+      result = result.filter((p) => {
+        if (!p.priceMin) return false;
+        return p.priceMin >= min && p.priceMin <= max;
+      });
+    }
+
+    // Sort
+    if (sort === "price_asc") {
+      result.sort((a, b) => (a.priceMin ?? Infinity) - (b.priceMin ?? Infinity));
+    } else if (sort === "price_desc") {
+      result.sort((a, b) => (b.priceMin ?? -1) - (a.priceMin ?? -1));
+    } else if (sort === "name_asc") {
+      result.sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    return result;
+  }, [products, activeCategory, priceRange, sort]);
+
+  const hasActiveFilters = activeCategory || priceRange || sort !== "default";
+
+  function clearAll() {
+    setActiveCategory("");
+    setPriceRange("");
+    setSort("default");
+  }
+
+  const selectClass =
+    "text-sm text-charcoal/80 border border-walnut/20 bg-white rounded-sm px-3 py-1.5 focus:outline-1 focus:outline-sienna cursor-pointer";
 
   return (
     <>
-      {/* Category filter */}
-      <div className="flex gap-2 flex-wrap mb-8">
-        {CATEGORIES.map((cat) => (
+      {/* Filters row */}
+      <div className="flex flex-wrap items-center gap-3 mb-8">
+        {/* Category tabs */}
+        <div className="flex gap-2 flex-wrap">
+          {CATEGORIES.map((cat) => (
+            <button
+              key={cat.value}
+              onClick={() => setActiveCategory(cat.value)}
+              className={`text-sm font-medium px-4 py-1.5 rounded-sm border transition-colors duration-150 ${
+                activeCategory === cat.value
+                  ? "bg-walnut text-cream-soft border-walnut"
+                  : "bg-white text-charcoal/70 border-walnut/20 hover:border-walnut/40"
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Divider */}
+        <span className="hidden sm:block w-px h-5 bg-walnut/15 mx-1" />
+
+        {/* Price range */}
+        <select
+          value={priceRange}
+          onChange={(e) => setPriceRange(e.target.value)}
+          className={selectClass}
+          aria-label="Filter by price"
+        >
+          {PRICE_RANGES.map((r) => (
+            <option key={r.value} value={r.value}>{r.label}</option>
+          ))}
+        </select>
+
+        {/* Sort */}
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value)}
+          className={selectClass}
+          aria-label="Sort products"
+        >
+          {SORT_OPTIONS.map((s) => (
+            <option key={s.value} value={s.value}>{s.label}</option>
+          ))}
+        </select>
+
+        {/* Clear filters */}
+        {hasActiveFilters && (
           <button
-            key={cat.value}
-            onClick={() => setActiveCategory(cat.value)}
-            className={`text-sm font-medium px-4 py-1.5 rounded-sm border transition-colors duration-150 ${
-              activeCategory === cat.value
-                ? "bg-walnut text-cream-soft border-walnut"
-                : "bg-white text-charcoal/70 border-walnut/20 hover:border-walnut/40"
-            }`}
+            onClick={clearAll}
+            className="text-xs font-semibold text-sienna hover:text-sienna-dark underline ml-1"
           >
-            {cat.label}
+            Clear filters
           </button>
-        ))}
+        )}
       </div>
+
+      {/* Results count when filters are active */}
+      {hasActiveFilters && products.length > 0 && (
+        <p className="text-xs text-charcoal/45 mb-4">
+          {filtered.length} {filtered.length === 1 ? "item" : "items"} found
+        </p>
+      )}
 
       {/* Empty states */}
       {products.length === 0 && (
@@ -114,14 +213,12 @@ export default function CatalogClient({ products }) {
 
       {products.length > 0 && filtered.length === 0 && (
         <div className="py-16 text-center">
-          <p className="text-charcoal/50">
-            No items in this category right now.
-          </p>
+          <p className="text-charcoal/50 mb-2">No items match these filters.</p>
           <button
-            onClick={() => setActiveCategory("")}
-            className="text-sienna text-sm font-semibold hover:text-sienna-dark underline mt-2 block mx-auto"
+            onClick={clearAll}
+            className="text-sienna text-sm font-semibold hover:text-sienna-dark underline"
           >
-            Show all
+            Clear all filters
           </button>
         </div>
       )}

@@ -3,26 +3,54 @@
 import { useState } from "react";
 import { ORDER_STATUSES } from "@/lib/orderConstants";
 
+const UNITS = ["cm", "inch", "ft", "mm"];
+
+function emptyRow() {
+  return { label: "", value: "", unit: "cm" };
+}
+
 export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
   const [status, setStatus] = useState(order.status);
-  const [notes, setNotes] = useState(order.internalNotes || "");
-  const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState("");
+  const [notes, setNotes]   = useState(order.internalNotes || "");
+  const [measurements, setMeasurements] = useState(
+    order.customDetails?.confirmedMeasurements?.length
+      ? order.customDetails.confirmedMeasurements
+      : []
+  );
+  const [saving, setSaving]         = useState(false);
+  const [saveError, setSaveError]   = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
 
-  // Reset local state whenever the selected order changes (user clicks a
-  // different order in the list while this panel is already open).
-  // Normally you'd do this in a useEffect with order._id as a dep, but
-  // since we're passed the whole order object as a prop and the parent
-  // re-renders with a new order when selection changes, resetting on
-  // render is sufficient here and avoids the useEffect complexity.
   const [lastOrderId, setLastOrderId] = useState(order._id);
   if (order._id !== lastOrderId) {
     setLastOrderId(order._id);
     setStatus(order.status);
     setNotes(order.internalNotes || "");
+    setMeasurements(
+      order.customDetails?.confirmedMeasurements?.length
+        ? order.customDetails.confirmedMeasurements
+        : []
+    );
     setSaveSuccess(false);
     setSaveError("");
+  }
+
+  function updateRow(index, field, value) {
+    setMeasurements((prev) => {
+      const next = [...prev];
+      next[index] = { ...next[index], [field]: value };
+      return next;
+    });
+    setSaveSuccess(false);
+  }
+
+  function addRow() {
+    setMeasurements((prev) => [...prev, emptyRow()]);
+  }
+
+  function removeRow(index) {
+    setMeasurements((prev) => prev.filter((_, i) => i !== index));
+    setSaveSuccess(false);
   }
 
   async function handleSave() {
@@ -30,11 +58,20 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
     setSaveError("");
     setSaveSuccess(false);
 
+    // Strip incomplete rows before saving (label or value empty)
+    const cleanedMeasurements = measurements.filter(
+      (r) => r.label.trim() && r.value.trim()
+    );
+
     try {
       const res = await fetch(`/api/admin/orders/${order._id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, internalNotes: notes }),
+        body: JSON.stringify({
+          status,
+          internalNotes: notes,
+          ...(order.orderType === "custom" && { confirmedMeasurements: cleanedMeasurements }),
+        }),
       });
 
       const result = await res.json();
@@ -106,10 +143,16 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
         <p className={fieldLabel + " mb-2"}>What they want</p>
         {order.orderType === "custom" ? (
           <div className="text-sm text-charcoal/80 space-y-2">
+            {order.customDetails?.furnitureType && order.customDetails.furnitureType !== "other" && (
+              <p>
+                <span className="font-medium">Type:</span>{" "}
+                <span className="capitalize">{order.customDetails.furnitureType.replace(/_/g, " ")}</span>
+              </p>
+            )}
             <p>{order.customDetails?.description}</p>
             {order.customDetails?.dimensions && (
               <p>
-                <span className="font-medium">Dimensions:</span>{" "}
+                <span className="font-medium">Size estimate:</span>{" "}
                 {order.customDetails.dimensions}
               </p>
             )}
@@ -125,6 +168,12 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
                 {order.customDetails.budgetRange}
               </p>
             )}
+            {order.customDetails?.referenceProduct && (
+              <p>
+                <span className="font-medium">Reference:</span>{" "}
+                {order.customDetails.referenceProduct?.name || "—"}
+              </p>
+            )}
           </div>
         ) : (
           <p className="text-sm text-charcoal/80">
@@ -132,6 +181,70 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
           </p>
         )}
       </div>
+
+      {/* Confirmed measurements — custom orders only */}
+      {order.orderType === "custom" && (
+        <div className="mb-5 pb-5 border-b border-walnut/10">
+          <div className="flex items-center justify-between mb-2">
+            <p className={fieldLabel}>Production measurements</p>
+            {order.customDetails?.dimensions && (
+              <span className="text-[0.7rem] text-charcoal/40 italic">
+                Customer estimate: &ldquo;{order.customDetails.dimensions}&rdquo;
+              </span>
+            )}
+          </div>
+
+          {measurements.length === 0 && (
+            <p className="text-xs text-charcoal/40 mb-2">
+              No confirmed measurements yet. Add them after the site visit.
+            </p>
+          )}
+
+          <div className="space-y-2 mb-2">
+            {measurements.map((row, i) => (
+              <div key={i} className="flex gap-1.5 items-center">
+                <input
+                  type="text"
+                  value={row.label}
+                  onChange={(e) => updateRow(i, "label", e.target.value)}
+                  placeholder="e.g. Length"
+                  className="flex-1 min-w-0 px-2 py-1.5 border border-walnut/20 bg-cream-soft rounded-sm text-xs text-charcoal focus:outline-1 focus:outline-sienna"
+                />
+                <input
+                  type="text"
+                  value={row.value}
+                  onChange={(e) => updateRow(i, "value", e.target.value)}
+                  placeholder="e.g. 180"
+                  className="w-16 px-2 py-1.5 border border-walnut/20 bg-cream-soft rounded-sm text-xs text-charcoal focus:outline-1 focus:outline-sienna"
+                />
+                <select
+                  value={row.unit}
+                  onChange={(e) => updateRow(i, "unit", e.target.value)}
+                  className="w-14 px-1 py-1.5 border border-walnut/20 bg-cream-soft rounded-sm text-xs text-charcoal focus:outline-1 focus:outline-sienna"
+                >
+                  {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => removeRow(i)}
+                  className="text-charcoal/35 hover:text-red-500 text-sm leading-none px-1"
+                  aria-label="Remove row"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={addRow}
+            className="text-xs font-semibold text-sienna hover:text-sienna-dark"
+          >
+            + Add measurement
+          </button>
+        </div>
+      )}
 
       {/* Status history */}
       {order.statusHistory?.length > 0 && (

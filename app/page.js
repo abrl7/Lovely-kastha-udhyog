@@ -1,5 +1,18 @@
 export const dynamic = "force-dynamic";
 
+export const metadata = {
+  title: "Handcrafted Wood Furniture — Made in Nepal",
+  description:
+    "Lovely Kastha Udhog crafts solid wood furniture by hand — living room, bedroom, dining, office, and fully custom pieces built to your measurements.",
+  openGraph: {
+    title: "Lovely Kastha Udhog — Handcrafted Wood Furniture",
+    description:
+      "Solid wood furniture, hand-built in Nepal. Ready-made pieces and fully custom orders.",
+    url: "/",
+    type: "website",
+  },
+};
+
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import GrainBand from "@/components/GrainBand";

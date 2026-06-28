@@ -104,27 +104,8 @@ export async function PATCH(request, { params }) {
     await connectDB();
 
     const body = await request.json();
-    const { status, internalNotes } = body;
+    const { status, internalNotes, confirmedMeasurements } = body;
 
-    // Build the update object with only the fields that were sent.
-    // Using $set means MongoDB touches only these fields, leaving
-    // everything else on the document untouched.
-    const updates = {};
-    if (status !== undefined) updates.status = status;
-    if (internalNotes !== undefined) updates.internalNotes = internalNotes;
-
-    if (Object.keys(updates).length === 0) {
-      return NextResponse.json(
-        { success: false, error: "No fields to update provided" },
-        { status: 400 }
-      );
-    }
-
-    // findById first, then save — rather than findByIdAndUpdate — because
-    // we want the Order schema's pre('save') hook to run. That hook is what
-    // automatically appends to statusHistory when status changes (see
-    // models/Order.js). findByIdAndUpdate bypasses mongoose hooks entirely,
-    // so status changes would silently stop being tracked in the history.
     const order = await Order.findById(params.id);
 
     if (!order) {
@@ -136,8 +117,11 @@ export async function PATCH(request, { params }) {
 
     if (status !== undefined) order.status = status;
     if (internalNotes !== undefined) order.internalNotes = internalNotes;
+    if (confirmedMeasurements !== undefined && order.customDetails) {
+      order.customDetails.confirmedMeasurements = confirmedMeasurements;
+    }
 
-    await order.save(); // <-- triggers the pre('save') hook
+    await order.save(); // triggers pre('save') hook for statusHistory
 
     return NextResponse.json({ success: true, data: order });
   } catch (error) {

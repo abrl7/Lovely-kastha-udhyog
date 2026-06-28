@@ -124,7 +124,14 @@ export async function POST(request) {
         );
       }
 
-      orderData.customDetails = customDetails;
+      orderData.customDetails = {
+        referenceProduct: customDetails.referenceProduct || null,
+        furnitureType:    customDetails.furnitureType    || "other",
+        description:      customDetails.description,
+        dimensions:       customDetails.dimensions       || "",
+        woodPreference:   customDetails.woodPreference   || "",
+        budgetRange:      customDetails.budgetRange      || "",
+      };
     }
 
     // Generate the human-friendly order code now, just before creating

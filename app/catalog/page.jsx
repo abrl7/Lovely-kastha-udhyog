@@ -6,8 +6,16 @@ import CatalogClient from "@/components/CatalogClient";
 import { getReadyMadeProducts } from "@/lib/data";
 
 export const metadata = {
-  title: "Catalog — Lovely Kastha Udhog",
-  description: "Ready-made solid wood furniture, available now from our workshop.",
+  title: "Catalog",
+  description:
+    "Ready-made solid wood furniture, available now from our workshop. Browse tables, wardrobes, sofas, beds and more — each piece hand-built in Nepal.",
+  openGraph: {
+    title: "Furniture Catalog — Lovely Kastha Udhog",
+    description:
+      "In-stock solid wood furniture, ready to take home. Hand-built in our Nepal workshop.",
+    url: "/catalog",
+    type: "website",
+  },
 };
 
 export default async function CatalogPage() {

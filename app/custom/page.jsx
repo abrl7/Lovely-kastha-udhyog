@@ -1,26 +1,26 @@
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import Inquiry from "@/components/Inquiry";
-import ReferenceGrid from "@/components/ReferenceGrid";
+import CustomOrderClient from "@/components/CustomOrderClient";
 import { getAllActiveProducts } from "@/lib/data";
 
 export const metadata = {
-  title: "Custom Order — Lovely Kastha Udhog",
+  title: "Custom Order",
   description:
-    "Describe what you want. We build it by hand, to your measurements and wood preference.",
+    "Want something specific? Describe the piece, share your measurements and wood preference, and we'll build it by hand just for you.",
+  openGraph: {
+    title: "Custom Furniture Order — Lovely Kastha Udhog",
+    description:
+      "Tell us what you have in mind. We build custom solid wood furniture to your exact measurements and style.",
+    url: "/custom",
+    type: "website",
+  },
 };
 
-export default async function CustomPage({ searchParams }) {
+export default async function CustomPage() {
   // Show ALL active products (ready-made AND reference-only) as
-  // inspiration pieces. A customer coming from the catalog clicked a
-  // ready-made item — that item is ready_made, not reference_only, so
-  // using getReferenceProducts() would mean it never appears in the
-  // grid and the highlight never fires. getAllActiveProducts() fixes that.
+  // inspiration pieces so a customer arriving from the catalog can
+  // still see and select the item they came from.
   const allProducts = await getAllActiveProducts();
-
-  // The product ID passed via ?reference=<id> from the catalog "Inquire"
-  // link — used to highlight that specific tile in the grid.
-  const referenceId = searchParams?.reference || null;
 
   return (
     <main>
@@ -35,28 +35,15 @@ export default async function CustomPage({ searchParams }) {
           </h1>
           <p className="text-charcoal/70 mt-3">
             Every custom piece starts with a conversation. Fill in what
-            you&apos;re looking for — the kind of piece, your dimensions,
-            wood preference — and we&apos;ll be in touch to talk through
-            the details before anything is built.
+            you&apos;re looking for — the kind of piece, your rough dimensions,
+            wood preference — and we&apos;ll be in touch to talk through the
+            details before anything is built.
           </p>
         </div>
       </div>
 
-      {allProducts.length > 0 && (
-        <div className="px-[6vw] mb-16">
-          <p className="text-[0.72rem] font-semibold tracking-[0.18em] uppercase text-charcoal/40 mb-5">
-            {referenceId
-              ? "Your selected reference piece is highlighted below"
-              : "Browse for inspiration — or describe your own idea below"}
-          </p>
-          <ReferenceGrid
-            products={allProducts}
-            highlightedId={referenceId}
-          />
-        </div>
-      )}
+      <CustomOrderClient products={allProducts} />
 
-      <Inquiry />
       <Footer />
     </main>
   );

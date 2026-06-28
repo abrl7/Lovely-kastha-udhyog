@@ -2,42 +2,35 @@
 
 import { useState } from "react";
 
-// Matches the `category` enum on the Product model — kept here as the
-// single source of truth for this form's dropdown options. If the
-// Product model's category enum ever changes, update this list to match.
-const CATEGORY_OPTIONS = [
-  { value: "living_room", label: "Living Room Furniture" },
-  { value: "bedroom", label: "Bedroom Furniture" },
-  { value: "dining", label: "Dining Furniture" },
-  { value: "office", label: "Office Furniture" },
-  { value: "other", label: "Something Else / Not Sure" },
+const FURNITURE_TYPES = [
+  { value: "table",    label: "Table / Desk" },
+  { value: "wardrobe", label: "Wardrobe / Cabinet" },
+  { value: "sofa",     label: "Sofa / Couch" },
+  { value: "bed",      label: "Bed / Headboard" },
+  { value: "chair",    label: "Chair / Stool" },
+  { value: "shelf",    label: "Shelf / Rack / Bookcase" },
+  { value: "other",    label: "Other / Not Sure" },
 ];
 
-// Centralizing initial state in one object means resetting the form after
-// a successful submit is a single line (`setFormData(initialFormState)`)
-// instead of resetting each field individually.
+const CONTACT_PHONE = "+977-98-16630510"; // replace with real number
+const CONTACT_WHATSAPP = "9779816630510"; // replace with real number (digits only)
+
 const initialFormState = {
-  name: "",
-  phone: "",
-  category: CATEGORY_OPTIONS[0].value,
-  message: "",
+  name:          "",
+  phone:         "",
+  furnitureType: "",
+  dimensions:    "",
+  woodPreference:"",
+  message:       "",
 };
 
-export default function InquiryForm() {
-  // formData holds what the user has typed — this is what makes the
-  // inputs "controlled" (React owns the value, not the DOM). Controlled
-  // inputs are what let us read formData.name etc. when submitting,
-  // rather than reaching into the DOM manually.
-  const [formData, setFormData] = useState(initialFormState);
-
-  // submitStatus tracks where we are in the request lifecycle:
-  // 'idle' -> 'submitting' -> 'success' | 'error'
-  // Driving the UI off one status string (instead of separate
-  // isLoading/isSuccess/isError booleans) avoids impossible states like
-  // "loading AND success at the same time" that separate booleans allow.
+// selectedReference — product object passed from CustomOrderClient (or null)
+// onClearReference  — callback to deselect the reference tile
+export default function InquiryForm({ selectedReference, onClearReference }) {
+  const [formData, setFormData]       = useState(initialFormState);
   const [submitStatus, setSubmitStatus] = useState("idle");
   const [errorMessage, setErrorMessage] = useState("");
-  const [confirmedOrder, setConfirmedOrder] = useState(null); // stores { orderCode } from API response
+  const [confirmedOrder, setConfirmedOrder] = useState(null);
 
   function handleChange(e) {
     const { id, value } = e.target;
@@ -54,29 +47,21 @@ export default function InquiryForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          orderType: "custom",
-          customerName: formData.name,
+          orderType:    "custom",
+          customerName:  formData.name,
           customerPhone: formData.phone,
           customDetails: {
-            // Folding the category into the description text (rather
-            // than adding a separate top-level field) because the Order
-            // model's customDetails.description is the one place this
-            // kind of free-text context belongs — see models/Order.js.
-            description: `[${
-              CATEGORY_OPTIONS.find((c) => c.value === formData.category)
-                ?.label
-            }] ${formData.message}`,
+            referenceProduct: selectedReference?._id || null,
+            furnitureType:    formData.furnitureType || "other",
+            description:      formData.message,
+            dimensions:       formData.dimensions,
+            woodPreference:   formData.woodPreference,
           },
         }),
       });
 
       const result = await response.json();
-
       if (!response.ok || !result.success) {
-        // The API sends back a human-readable `error` string on failure
-        // (see app/api/orders/route.js) — surfacing it directly means
-        // validation problems are actually informative instead of a
-        // generic "something went wrong."
         throw new Error(result.error || "Something went wrong. Please try again.");
       }
 
@@ -92,21 +77,19 @@ export default function InquiryForm() {
 
   const fieldClass =
     "w-full px-[0.9rem] py-[0.8rem] border-[1.5px] border-walnut/20 bg-cream-soft rounded-sm font-sans text-[0.92rem] text-charcoal focus:outline-2 focus:outline-sienna focus:outline-offset-1 focus:border-sienna disabled:opacity-60 disabled:cursor-not-allowed";
-
   const labelClass =
     "block text-[0.78rem] font-semibold tracking-[0.04em] text-walnut-deep mb-[0.4rem]";
-
   const isSubmitting = submitStatus === "submitting";
 
-  // Once the order is successfully created, show a confirmation instead
-  // of the form. This also gives the customer their order code, which —
-  // per the tracking design in app/api/orders/route.js — they'll need
-  // alongside their phone number to check status later.
   if (submitStatus === "success") {
+    const waText = encodeURIComponent(
+      `Hi, I just submitted an inquiry. My order code is ${confirmedOrder?.orderCode}.`
+    );
+
     return (
       <div className="py-[6.5rem] px-[5vw]">
         <div className="bg-cream-soft border-[1.5px] border-sienna/30 rounded-sm p-8">
-          <h3 className="font-serif text-[1.4rem] text-walnut-deep mb-3">
+          <h3 className="font-serif text-[1.4rem] text-walnut-deep mb-2">
             Inquiry received
           </h3>
           <p className="text-[0.95rem] text-charcoal/80 mb-5">
@@ -114,7 +97,7 @@ export default function InquiryForm() {
           </p>
 
           {confirmedOrder && (
-            <div className="bg-white border border-walnut/15 rounded-sm p-4 mb-5">
+            <div className="bg-white border border-walnut/15 rounded-sm p-4 mb-6">
               <p className="text-[0.72rem] font-semibold tracking-[0.08em] uppercase text-charcoal/40 mb-1">
                 Your Order Code
               </p>
@@ -122,20 +105,48 @@ export default function InquiryForm() {
                 {confirmedOrder.orderCode}
               </p>
               <p className="text-xs text-charcoal/50 mt-1">
-                Save this code — you&apos;ll need it along with your phone
-                number to track your order.
+                Save this — you&apos;ll need it with your phone number to track your order.
               </p>
             </div>
           )}
 
-          <a
-            href="/track"
-            className="inline-block bg-sienna text-cream-soft font-semibold text-[0.88rem] px-5 py-2.5 rounded-sm hover:bg-sienna-dark transition-colors duration-200 mb-4"
-          >
-            Track your order →
-          </a>
+          {/* Next steps + contact */}
+          <div className="border-t border-walnut/10 pt-5 mb-6">
+            <p className="text-[0.78rem] font-semibold tracking-[0.08em] uppercase text-charcoal/40 mb-3">
+              What happens next
+            </p>
+            <p className="text-[0.9rem] text-charcoal/70 mb-4">
+              We&apos;ll call you within 24 hours to discuss the details and schedule a
+              measurement visit if needed.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href={`tel:${CONTACT_PHONE.replace(/[^+\d]/g, "")}`}
+                className="inline-flex items-center gap-2 bg-walnut text-cream-soft text-[0.85rem] font-semibold px-4 py-2.5 rounded-sm hover:bg-walnut-deep transition-colors duration-200"
+              >
+                <span>📞</span> Call us
+              </a>
+              <a
+                href={`https://wa.me/${CONTACT_WHATSAPP}?text=${waText}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-[#25D366] text-white text-[0.85rem] font-semibold px-4 py-2.5 rounded-sm hover:bg-[#1ebe5a] transition-colors duration-200"
+              >
+                <span>💬</span> WhatsApp
+              </a>
+            </div>
+            <p className="text-xs text-charcoal/40 mt-3">
+              {CONTACT_PHONE} · Sun–Fri, 10am–7pm
+            </p>
+          </div>
 
-          <div>
+          <div className="flex items-center gap-4">
+            <a
+              href="/track"
+              className="inline-block bg-sienna text-cream-soft font-semibold text-[0.88rem] px-5 py-2.5 rounded-sm hover:bg-sienna-dark transition-colors duration-200"
+            >
+              Track your order →
+            </a>
             <button
               type="button"
               onClick={() => { setSubmitStatus("idle"); setConfirmedOrder(null); }}
@@ -151,12 +162,29 @@ export default function InquiryForm() {
 
   return (
     <div className="py-[6.5rem] px-[5vw]">
+      {/* Reference chip — shown when customer selected a product above */}
+      {selectedReference && (
+        <div className="flex items-center gap-2 bg-sienna/8 border border-sienna/25 rounded-sm px-3 py-2 mb-5">
+          <span className="text-[0.78rem] text-charcoal/60 font-medium">Referencing:</span>
+          <span className="text-[0.85rem] font-semibold text-walnut-deep flex-1">
+            {selectedReference.name}
+          </span>
+          <button
+            type="button"
+            onClick={onClearReference}
+            className="text-charcoal/35 hover:text-charcoal text-sm leading-none ml-1"
+            aria-label="Remove reference"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit}>
+        {/* Name + Phone */}
         <div className="grid sm:grid-cols-2 gap-[1.1rem] mb-[1.1rem]">
           <div>
-            <label htmlFor="name" className={labelClass}>
-              Full Name
-            </label>
+            <label htmlFor="name" className={labelClass}>Full Name</label>
             <input
               type="text"
               id="name"
@@ -168,9 +196,7 @@ export default function InquiryForm() {
             />
           </div>
           <div>
-            <label htmlFor="phone" className={labelClass}>
-              Phone Number
-            </label>
+            <label htmlFor="phone" className={labelClass}>Phone Number</label>
             <input
               type="tel"
               id="phone"
@@ -182,24 +208,72 @@ export default function InquiryForm() {
             />
           </div>
         </div>
+
+        {/* Furniture type */}
         <div className="mb-[1.1rem]">
-          <label htmlFor="category" className={labelClass}>
-            What are you interested in?
+          <label htmlFor="furnitureType" className={labelClass}>
+            Type of furniture{" "}
+            <span className="text-charcoal/40 font-normal normal-case tracking-normal">
+              (optional)
+            </span>
           </label>
           <select
-            id="category"
-            value={formData.category}
+            id="furnitureType"
+            value={formData.furnitureType}
             onChange={handleChange}
             disabled={isSubmitting}
             className={fieldClass}
           >
-            {CATEGORY_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
+            <option value="">— Select a type —</option>
+            {FURNITURE_TYPES.map((t) => (
+              <option key={t.value} value={t.value}>{t.label}</option>
             ))}
           </select>
         </div>
+
+        {/* Rough size hint */}
+        <div className="mb-[1.1rem]">
+          <label htmlFor="dimensions" className={labelClass}>
+            Approximate size{" "}
+            <span className="text-charcoal/40 font-normal normal-case tracking-normal">
+              (optional)
+            </span>
+          </label>
+          <input
+            type="text"
+            id="dimensions"
+            value={formData.dimensions}
+            onChange={handleChange}
+            disabled={isSubmitting}
+            placeholder='e.g. "5 feet wide", "fits a 3m × 4m room", "same as queen bed"'
+            className={fieldClass}
+          />
+          <p className="text-[0.74rem] text-charcoal/45 mt-1.5">
+            Rough estimates are fine — exact measurements will be confirmed during
+            a visit or call.
+          </p>
+        </div>
+
+        {/* Wood preference */}
+        <div className="mb-[1.1rem]">
+          <label htmlFor="woodPreference" className={labelClass}>
+            Wood preference{" "}
+            <span className="text-charcoal/40 font-normal normal-case tracking-normal">
+              (optional)
+            </span>
+          </label>
+          <input
+            type="text"
+            id="woodPreference"
+            value={formData.woodPreference}
+            onChange={handleChange}
+            disabled={isSubmitting}
+            placeholder='e.g. "Teak", "Sal", "dark finish", "natural"'
+            className={fieldClass}
+          />
+        </div>
+
+        {/* Description */}
         <div className="mb-[1.1rem]">
           <label htmlFor="message" className={labelClass}>
             Tell us more
@@ -210,7 +284,7 @@ export default function InquiryForm() {
             value={formData.message}
             onChange={handleChange}
             disabled={isSubmitting}
-            placeholder="Describe the piece you're looking for, dimensions, wood preference, etc."
+            placeholder="Describe the piece you're looking for — style, usage, any special requirements…"
             className={`${fieldClass} min-h-[100px] resize-y`}
           />
         </div>
@@ -226,7 +300,7 @@ export default function InquiryForm() {
           disabled={isSubmitting}
           className="bg-sienna text-cream-soft border-none px-[2.3rem] py-[0.95rem] font-semibold text-[0.88rem] tracking-[0.04em] rounded-sm cursor-pointer hover:bg-sienna-dark transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {isSubmitting ? "Sending..." : "Send Inquiry"}
+          {isSubmitting ? "Sending…" : "Send Inquiry"}
         </button>
       </form>
     </div>

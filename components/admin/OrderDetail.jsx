@@ -10,8 +10,11 @@ function emptyRow() {
 }
 
 export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
-  const [status, setStatus] = useState(order.status);
-  const [notes, setNotes]   = useState(order.internalNotes || "");
+  const [status, setStatus]       = useState(order.status);
+  const [notes, setNotes]         = useState(order.internalNotes || "");
+  const [statusNote, setStatusNote] = useState("");
+  const [activityNote, setActivityNote] = useState("");
+  const [addingNote, setAddingNote]     = useState(false);
   const [measurements, setMeasurements] = useState(
     order.customDetails?.confirmedMeasurements?.length
       ? order.customDetails.confirmedMeasurements
@@ -26,6 +29,8 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
     setLastOrderId(order._id);
     setStatus(order.status);
     setNotes(order.internalNotes || "");
+    setStatusNote("");
+    setActivityNote("");
     setMeasurements(
       order.customDetails?.confirmedMeasurements?.length
         ? order.customDetails.confirmedMeasurements
@@ -33,6 +38,26 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
     );
     setSaveSuccess(false);
     setSaveError("");
+  }
+
+  async function handleAddNote() {
+    if (!activityNote.trim()) return;
+    setAddingNote(true);
+    try {
+      const res = await fetch(`/api/admin/orders/${order._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ activityNote }),
+      });
+      const result = await res.json();
+      if (!result.success) throw new Error(result.error);
+      setActivityNote("");
+      onUpdate();
+    } catch (err) {
+      setSaveError(err.message || "Failed to add note.");
+    } finally {
+      setAddingNote(false);
+    }
   }
 
   function updateRow(index, field, value) {
@@ -70,6 +95,7 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
         body: JSON.stringify({
           status,
           internalNotes: notes,
+          ...(statusNote.trim() && { statusNote: statusNote.trim() }),
           ...(order.orderType === "custom" && { confirmedMeasurements: cleanedMeasurements }),
         }),
       });
@@ -78,8 +104,7 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
       if (!result.success) throw new Error(result.error);
 
       setSaveSuccess(true);
-      // Refresh the parent list so the card's status badge updates too
-      // without a full page reload.
+      setStatusNote("");
       onUpdate();
     } catch (err) {
       setSaveError(err.message || "Failed to save. Please try again.");
@@ -246,33 +271,69 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
         </div>
       )}
 
-      {/* Status history */}
-      {order.statusHistory?.length > 0 && (
-        <div className="mb-5 pb-5 border-b border-walnut/10">
-          <p className={fieldLabel + " mb-2"}>History</p>
-          <ol className="space-y-2">
-            {[...order.statusHistory].reverse().map((entry, i) => (
-              <li key={i} className="flex items-start gap-2 text-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-brass mt-1.5 flex-none" />
-                <div>
-                  <span className="font-medium text-charcoal/80">
-                    {entry.status.replace(/_/g, " ")}
-                  </span>
-                  <span className="text-charcoal/40 ml-1.5">
-                    {new Date(entry.changedAt).toLocaleDateString("en-NP", {
-                      day: "numeric",
-                      month: "short",
-                    })}
-                  </span>
-                  {entry.note && (
-                    <p className="text-charcoal/60 mt-0.5">{entry.note}</p>
-                  )}
-                </div>
-              </li>
-            ))}
-          </ol>
+      {/* Activity feed — status changes + manual notes, newest first */}
+      <div className="mb-5 pb-5 border-b border-walnut/10">
+        <p className={fieldLabel + " mb-3"}>Activity</p>
+
+        {/* Manual note input */}
+        <div className="flex gap-2 mb-3">
+          <input
+            type="text"
+            value={activityNote}
+            onChange={(e) => setActivityNote(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleAddNote(); }}}
+            placeholder="Add a note… (e.g. called customer, agreed on delivery)"
+            disabled={addingNote}
+            className="flex-1 min-w-0 px-3 py-1.5 border border-walnut/20 bg-cream-soft rounded-sm text-xs text-charcoal focus:outline-1 focus:outline-sienna disabled:opacity-60"
+          />
+          <button
+            type="button"
+            onClick={handleAddNote}
+            disabled={addingNote || !activityNote.trim()}
+            className="text-xs font-semibold text-sienna border border-sienna/30 rounded-sm px-3 py-1.5 hover:bg-sienna/5 disabled:opacity-40"
+          >
+            {addingNote ? "…" : "Add"}
+          </button>
         </div>
-      )}
+
+        {/* Combined feed */}
+        {(() => {
+          const statusEntries = (order.statusHistory || []).map((e) => ({
+            message: `Status → ${e.status.replace(/_/g, " ")}${e.note ? ` — ${e.note}` : ""}`,
+            createdAt: e.changedAt,
+            isStatus: true,
+          }));
+          const manualEntries = (order.activityLog || []).map((e) => ({
+            message: e.message,
+            createdAt: e.createdAt,
+            isStatus: false,
+          }));
+          // Use activityLog if present (it includes status events too), else fall back to statusHistory only
+          const entries = manualEntries.length
+            ? [...manualEntries].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            : [...statusEntries].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+          if (!entries.length) return <p className="text-xs text-charcoal/40">No activity yet.</p>;
+
+          return (
+            <ol className="space-y-2 max-h-48 overflow-y-auto pr-1">
+              {entries.map((entry, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs">
+                  <span className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-none ${entry.isStatus ? "bg-brass" : "bg-charcoal/30"}`} />
+                  <div>
+                    <span className="text-charcoal/75">{entry.message}</span>
+                    <span className="text-charcoal/35 ml-1.5">
+                      {new Date(entry.createdAt).toLocaleDateString("en-NP", {
+                        day: "numeric", month: "short",
+                      })}
+                    </span>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          );
+        })()}
+      </div>
 
       {/* Update form */}
       <div className="space-y-4">
@@ -293,6 +354,16 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
               </option>
             ))}
           </select>
+          {status !== order.status && (
+            <input
+              type="text"
+              value={statusNote}
+              onChange={(e) => { setStatusNote(e.target.value); setSaveSuccess(false); }}
+              placeholder="Reason for change (optional)"
+              disabled={saving}
+              className="mt-1.5 w-full px-3 py-1.5 border border-walnut/20 bg-cream-soft rounded-sm text-xs text-charcoal focus:outline-1 focus:outline-sienna disabled:opacity-60"
+            />
+          )}
         </div>
 
         <div>

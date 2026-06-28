@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/mongodb";
 import Order from "@/models/Order";
 import Product from "@/models/Product";
 import { generateOrderCode } from "@/lib/generateOrderCode";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 /*
   POST /api/orders
@@ -200,6 +201,24 @@ export async function POST(request) {
   login.
 */
 export async function GET(request) {
+  // Rate-limit order tracking to 15 attempts per IP per minute.
+  // Prevents brute-forcing phone+orderCode pairs.
+  const ip =
+    request.headers.get("x-forwarded-for")?.split(",")[0].trim() ||
+    request.headers.get("x-real-ip") ||
+    "unknown";
+
+  const { allowed, retryAfter } = checkRateLimit(ip, { max: 15, windowMs: 60_000 });
+  if (!allowed) {
+    return NextResponse.json(
+      { success: false, error: "Too many requests. Please try again in a moment." },
+      {
+        status: 429,
+        headers: { "Retry-After": String(retryAfter) },
+      }
+    );
+  }
+
   try {
     await connectDB();
 

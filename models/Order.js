@@ -24,6 +24,17 @@ import mongoose from "mongoose";
   orders" on their own. So embedding avoids an unnecessary lookup/join.
 */
 
+// A manual log entry the admin can append at any time — separate from
+// statusHistory which is auto-managed. Used for notes like "Called
+// customer, confirmed delivery by Dashain" without changing status.
+const activityLogEntrySchema = new mongoose.Schema(
+  {
+    message:   { type: String, required: true, trim: true },
+    createdAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
 // Each entry is a snapshot: "at this time, the order moved to this
 // status, and here's an optional note about why."
 const statusHistoryEntrySchema = new mongoose.Schema(
@@ -241,6 +252,23 @@ const orderSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+
+    // Append-only activity log. Admin can add manual entries at any time
+    // (e.g. "Called customer, agreed on delivery date"). Status changes
+    // are also echoed here automatically by the pre-save hook so the admin
+    // has one unified feed instead of two separate lists.
+    activityLog: {
+      type: [activityLogEntrySchema],
+      default: [],
+    },
+
+    // Transient field: when the admin saves a status change, they can
+    // optionally attach a short note. The pre-save hook reads this, adds
+    // it to statusHistory, then clears it so it's never persisted.
+    _statusNote: {
+      type: String,
+      select: false, // never returned by queries
+    },
   },
   {
     timestamps: true,
@@ -260,6 +288,7 @@ orderSchema.index({ customerPhone: 1 });
 // every time — the model takes care of keeping them in sync.
 orderSchema.pre("save", function (next) {
   const order = this;
+  const now = new Date();
 
   const lastEntry = order.statusHistory[order.statusHistory.length - 1];
   const statusChanged = !lastEntry || lastEntry.status !== order.status;
@@ -267,9 +296,21 @@ orderSchema.pre("save", function (next) {
   if (statusChanged) {
     order.statusHistory.push({
       status: order.status,
-      changedAt: new Date(),
+      note: order._statusNote || undefined,
+      changedAt: now,
+    });
+
+    // Mirror status change into the unified activity log
+    const label = order.status.replace(/_/g, " ");
+    const noteText = order._statusNote ? ` — ${order._statusNote}` : "";
+    order.activityLog.push({
+      message: `Status changed to "${label}"${noteText}`,
+      createdAt: now,
     });
   }
+
+  // Clear the transient note so it doesn't get stored on the document
+  order._statusNote = undefined;
 
   next();
 });

@@ -104,7 +104,7 @@ export async function PATCH(request, { params }) {
     await connectDB();
 
     const body = await request.json();
-    const { status, internalNotes, confirmedMeasurements } = body;
+    const { status, internalNotes, confirmedMeasurements, statusNote, activityNote } = body;
 
     const order = await Order.findById(params.id);
 
@@ -119,6 +119,13 @@ export async function PATCH(request, { params }) {
     if (internalNotes !== undefined) order.internalNotes = internalNotes;
     if (confirmedMeasurements !== undefined && order.customDetails) {
       order.customDetails.confirmedMeasurements = confirmedMeasurements;
+    }
+    // Pass through to pre-save hook which writes it into statusHistory + activityLog
+    if (statusNote) order._statusNote = statusNote;
+
+    // Manual log entry — appended directly, no status change required
+    if (activityNote?.trim()) {
+      order.activityLog.push({ message: activityNote.trim(), createdAt: new Date() });
     }
 
     await order.save(); // triggers pre('save') hook for statusHistory

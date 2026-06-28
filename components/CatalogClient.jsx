@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -29,18 +29,31 @@ const SORT_OPTIONS = [
 ];
 
 function ProductTile({ product }) {
-  const firstImage = product.images?.[0]?.url;
+  const images = product.images || [];
+  const [imgIndex, setImgIndex] = useState(0);
   const price = product.priceMin
     ? `From Rs. ${product.priceMin.toLocaleString()}`
     : null;
 
+  const prev = useCallback((e) => {
+    e.preventDefault();
+    setImgIndex((i) => (i - 1 + images.length) % images.length);
+  }, [images.length]);
+
+  const next = useCallback((e) => {
+    e.preventDefault();
+    setImgIndex((i) => (i + 1) % images.length);
+  }, [images.length]);
+
+  const currentImage = images[imgIndex]?.url;
+
   return (
     <div className="group bg-white border border-walnut/10 rounded-sm overflow-hidden hover:shadow-md transition-shadow duration-300">
       <div className="relative h-56 bg-cream overflow-hidden">
-        {firstImage ? (
+        {currentImage ? (
           <Image
-            src={firstImage}
-            alt={product.name}
+            src={currentImage}
+            alt={`${product.name} — image ${imgIndex + 1}`}
             fill
             className="object-cover transition-transform duration-500 group-hover:scale-[1.05]"
           />
@@ -49,6 +62,38 @@ function ProductTile({ product }) {
             <span className="text-charcoal/25 text-sm">No image yet</span>
           </div>
         )}
+
+        {/* Carousel nav — only shown when product has multiple images */}
+        {images.length > 1 && (
+          <>
+            <button
+              onClick={prev}
+              className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/30 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-black/50"
+              aria-label="Previous image"
+            >
+              ‹
+            </button>
+            <button
+              onClick={next}
+              className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/30 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-black/50"
+              aria-label="Next image"
+            >
+              ›
+            </button>
+            {/* Dot indicators */}
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+              {images.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={(e) => { e.preventDefault(); setImgIndex(i); }}
+                  className={`w-1.5 h-1.5 rounded-full transition-all ${i === imgIndex ? "bg-white scale-125" : "bg-white/50"}`}
+                  aria-label={`Image ${i + 1}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
+
         {product.stockQuantity === 0 && (
           <div className="absolute inset-0 bg-walnut-deep/50 flex items-center justify-center">
             <span className="bg-walnut-deep text-cream-soft text-xs font-semibold px-3 py-1.5 rounded-sm">

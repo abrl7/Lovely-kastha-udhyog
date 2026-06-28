@@ -75,6 +75,16 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
     }));
   }
 
+  function moveImage(index, direction) {
+    setForm((prev) => {
+      const imgs = [...prev.images];
+      const swapWith = index + direction;
+      if (swapWith < 0 || swapWith >= imgs.length) return prev;
+      [imgs[index], imgs[swapWith]] = [imgs[swapWith], imgs[index]];
+      return { ...prev, images: imgs.map((img, i) => ({ ...img, sortOrder: i })) };
+    });
+  }
+
   async function handleFileUpload(e) {
     const files = Array.from(e.target.files);
     if (!files.length) return;
@@ -362,7 +372,7 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
               {form.images.map((img, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-3 bg-cream rounded-sm px-3 py-2"
+                  className="flex items-center gap-2 bg-cream rounded-sm px-3 py-2"
                 >
                   <img
                     src={img.url}
@@ -370,8 +380,25 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
                     className="w-12 h-12 object-cover rounded-sm flex-none"
                     onError={(e) => { e.target.style.display = "none"; }}
                   />
+                  <div className="flex flex-col gap-0.5">
+                    <button
+                      type="button"
+                      onClick={() => moveImage(i, -1)}
+                      disabled={isBusy || i === 0}
+                      className="text-[0.65rem] text-charcoal/40 hover:text-charcoal leading-none disabled:opacity-20"
+                      aria-label="Move up"
+                    >▲</button>
+                    <button
+                      type="button"
+                      onClick={() => moveImage(i, 1)}
+                      disabled={isBusy || i === form.images.length - 1}
+                      className="text-[0.65rem] text-charcoal/40 hover:text-charcoal leading-none disabled:opacity-20"
+                      aria-label="Move down"
+                    >▼</button>
+                  </div>
                   <span className="text-xs text-charcoal/60 flex-1 truncate">
-                    {img.url}
+                    {i === 0 && <span className="text-[0.68rem] font-semibold text-brass mr-1">Cover</span>}
+                    {img.url.split("/").pop()}
                   </span>
                   <button
                     type="button"

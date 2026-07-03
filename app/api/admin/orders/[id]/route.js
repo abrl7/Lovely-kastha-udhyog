@@ -104,7 +104,7 @@ export async function PATCH(request, { params }) {
     await connectDB();
 
     const body = await request.json();
-    const { status, internalNotes, confirmedMeasurements, statusNote, activityNote } = body;
+    const { status, internalNotes, confirmedMeasurements, statusNote, activityNote, agreedPrice } = body;
 
     const order = await Order.findById(params.id);
 
@@ -117,6 +117,9 @@ export async function PATCH(request, { params }) {
 
     if (status !== undefined) order.status = status;
     if (internalNotes !== undefined) order.internalNotes = internalNotes;
+    if (agreedPrice !== undefined) {
+      order.agreedPrice = agreedPrice === "" ? null : Number(agreedPrice);
+    }
     if (confirmedMeasurements !== undefined && order.customDetails) {
       order.customDetails.confirmedMeasurements = confirmedMeasurements;
     }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useEffect } from "react";
 
 const FURNITURE_TYPES = [
   { value: "table",    label: "Table / Desk" },
@@ -24,6 +23,47 @@ const initialFormState = {
   woodPreference:"",
   message:       "",
 };
+
+function OrderCodeBox({ orderCode }) {
+  const [copied, setCopied] = useState(false);
+
+  async function handleCopy() {
+    try {
+      await navigator.clipboard.writeText(orderCode);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API unavailable — silently do nothing
+    }
+  }
+
+  return (
+    <div className="bg-white border border-walnut/15 rounded-sm p-4 mb-6">
+      <p className="text-[0.72rem] font-semibold tracking-[0.08em] uppercase text-charcoal/40 mb-2">
+        Your Order Code
+      </p>
+      <div className="flex items-center gap-3">
+        <p className="font-serif text-2xl text-walnut-deep font-medium tracking-wide flex-1">
+          {orderCode}
+        </p>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className={`flex-none text-xs font-semibold px-3 py-1.5 rounded-sm border transition-all duration-150 ${
+            copied
+              ? "bg-green-50 border-green-300 text-green-700"
+              : "border-walnut/25 text-charcoal/60 hover:border-walnut/50 hover:text-charcoal"
+          }`}
+        >
+          {copied ? "Copied ✓" : "Copy"}
+        </button>
+      </div>
+      <p className="text-xs text-charcoal/50 mt-2">
+        Save this — you&apos;ll need it with your phone number to track your order.
+      </p>
+    </div>
+  );
+}
 
 // selectedReference — product object passed from CustomOrderClient (or null)
 // onClearReference  — callback to deselect the reference tile
@@ -98,17 +138,7 @@ export default function InquiryForm({ selectedReference, onClearReference }) {
           </p>
 
           {confirmedOrder && (
-            <div className="bg-white border border-walnut/15 rounded-sm p-4 mb-6">
-              <p className="text-[0.72rem] font-semibold tracking-[0.08em] uppercase text-charcoal/40 mb-1">
-                Your Order Code
-              </p>
-              <p className="font-serif text-2xl text-walnut-deep font-medium tracking-wide">
-                {confirmedOrder.orderCode}
-              </p>
-              <p className="text-xs text-charcoal/50 mt-1">
-                Save this — you&apos;ll need it with your phone number to track your order.
-              </p>
-            </div>
+            <OrderCodeBox orderCode={confirmedOrder.orderCode} />
           )}
 
           {/* Next steps + contact */}

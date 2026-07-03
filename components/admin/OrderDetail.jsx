@@ -10,9 +10,12 @@ function emptyRow() {
 }
 
 export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
-  const [status, setStatus]       = useState(order.status);
-  const [notes, setNotes]         = useState(order.internalNotes || "");
-  const [statusNote, setStatusNote] = useState("");
+  const [status, setStatus]           = useState(order.status);
+  const [notes, setNotes]             = useState(order.internalNotes || "");
+  const [agreedPrice, setAgreedPrice] = useState(
+    order.agreedPrice != null ? String(order.agreedPrice) : ""
+  );
+  const [statusNote, setStatusNote]   = useState("");
   const [activityNote, setActivityNote] = useState("");
   const [addingNote, setAddingNote]     = useState(false);
   const [measurements, setMeasurements] = useState(
@@ -20,8 +23,8 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
       ? order.customDetails.confirmedMeasurements
       : []
   );
-  const [saving, setSaving]         = useState(false);
-  const [saveError, setSaveError]   = useState("");
+  const [saving, setSaving]           = useState(false);
+  const [saveError, setSaveError]     = useState("");
   const [saveSuccess, setSaveSuccess] = useState(false);
 
   const [lastOrderId, setLastOrderId] = useState(order._id);
@@ -29,6 +32,7 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
     setLastOrderId(order._id);
     setStatus(order.status);
     setNotes(order.internalNotes || "");
+    setAgreedPrice(order.agreedPrice != null ? String(order.agreedPrice) : "");
     setStatusNote("");
     setActivityNote("");
     setMeasurements(
@@ -95,6 +99,7 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
         body: JSON.stringify({
           status,
           internalNotes: notes,
+          agreedPrice: agreedPrice,
           ...(statusNote.trim() && { statusNote: statusNote.trim() }),
           ...(order.orderType === "custom" && { confirmedMeasurements: cleanedMeasurements }),
         }),
@@ -143,7 +148,9 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
       <div className="grid grid-cols-2 gap-4 mb-5 pb-5 border-b border-walnut/10">
         <div>
           <p className={fieldLabel}>Phone</p>
-          <p className="text-sm">{order.customerPhone}</p>
+          <a href={`tel:${order.customerPhone}`} className="text-sm hover:text-sienna">
+            {order.customerPhone}
+          </a>
         </div>
         {order.customerEmail && (
           <div>
@@ -161,6 +168,14 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
           <p className={fieldLabel}>Received</p>
           <p className="text-sm">{createdDate}</p>
         </div>
+        {order.agreedPrice != null && (
+          <div className="col-span-2">
+            <p className={fieldLabel}>Agreed Price</p>
+            <p className="text-sm font-semibold text-walnut-deep">
+              Rs. {order.agreedPrice.toLocaleString()}
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Order details */}
@@ -364,6 +379,30 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
               className="mt-1.5 w-full px-3 py-1.5 border border-walnut/20 bg-cream-soft rounded-sm text-xs text-charcoal focus:outline-1 focus:outline-sienna disabled:opacity-60"
             />
           )}
+        </div>
+
+        <div>
+          <label htmlFor="agreed-price" className={fieldLabel}>
+            Agreed price (Rs.)
+          </label>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-charcoal/40 pointer-events-none">
+              Rs.
+            </span>
+            <input
+              id="agreed-price"
+              type="number"
+              min="0"
+              value={agreedPrice}
+              onChange={(e) => { setAgreedPrice(e.target.value); setSaveSuccess(false); }}
+              disabled={saving}
+              placeholder="e.g. 45000"
+              className="w-full pl-10 pr-3 py-2 border-[1.5px] border-walnut/20 bg-cream-soft rounded-sm text-sm text-charcoal focus:outline-2 focus:outline-sienna disabled:opacity-60"
+            />
+          </div>
+          <p className="text-[0.7rem] text-charcoal/40 mt-1">
+            Set after negotiating with the customer. Leave blank until confirmed.
+          </p>
         </div>
 
         <div>

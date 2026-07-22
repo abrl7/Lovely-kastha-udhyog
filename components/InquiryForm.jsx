@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import Image from "next/image";
 
 const FURNITURE_TYPES = [
   { value: "table",    label: "Table / Desk" },
@@ -68,14 +69,50 @@ function OrderCodeBox({ orderCode }) {
 // selectedReference — product object passed from CustomOrderClient (or null)
 // onClearReference  — callback to deselect the reference tile
 export default function InquiryForm({ selectedReference, onClearReference }) {
-  const [formData, setFormData]       = useState(initialFormState);
-  const [submitStatus, setSubmitStatus] = useState("idle");
-  const [errorMessage, setErrorMessage] = useState("");
+  const [formData, setFormData]         = useState(initialFormState);
+  const [submitStatus, setSubmitStatus]   = useState("idle");
+  const [errorMessage, setErrorMessage]   = useState("");
   const [confirmedOrder, setConfirmedOrder] = useState(null);
+  const [uploadedImages, setUploadedImages] = useState([]); // max 3 URLs
+  const [uploadingCount, setUploadingCount] = useState(0);
+  const [uploadError, setUploadError]     = useState("");
+  const fileInputRef = useRef(null);
 
   function handleChange(e) {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
+  }
+
+  async function handleImageFiles(files) {
+    const remaining = 3 - uploadedImages.length;
+    if (remaining <= 0) return;
+    const toUpload = Array.from(files).slice(0, remaining);
+    setUploadError("");
+    setUploadingCount((c) => c + toUpload.length);
+    const results = await Promise.all(
+      toUpload.map(async (file) => {
+        if (!file.type.startsWith("image/")) return null;
+        if (file.size > 5 * 1024 * 1024) {
+          setUploadError("Images must be under 5MB each.");
+          return null;
+        }
+        const fd = new FormData();
+        fd.append("file", file);
+        try {
+          const res = await fetch("/api/upload", { method: "POST", body: fd });
+          const data = await res.json();
+          if (data.success) return data.data.url;
+          setUploadError(data.error || "Upload failed");
+          return null;
+        } catch {
+          setUploadError("Upload failed — check your connection.");
+          return null;
+        }
+      })
+    );
+    const urls = results.filter(Boolean);
+    setUploadedImages((prev) => [...prev, ...urls].slice(0, 3));
+    setUploadingCount((c) => c - toUpload.length);
   }
 
   async function handleSubmit(e) {
@@ -97,6 +134,7 @@ export default function InquiryForm({ selectedReference, onClearReference }) {
             description:      formData.message,
             dimensions:       formData.dimensions,
             woodPreference:   formData.woodPreference,
+            referenceImages:  uploadedImages,
           },
         }),
       });
@@ -302,6 +340,70 @@ export default function InquiryForm({ selectedReference, onClearReference }) {
             placeholder='e.g. "Teak", "Sal", "dark finish", "natural"'
             className={fieldClass}
           />
+        </div>
+
+        {/* Inspiration photos */}
+        <div className="mb-[1.1rem]">
+          <p className={labelClass}>
+            Inspiration photos{" "}
+            <span className="text-charcoal/40 font-normal normal-case tracking-normal">
+              (optional, up to 3)
+            </span>
+          </p>
+
+          {/* Thumbnail row */}
+          {uploadedImages.length > 0 && (
+            <div className="flex gap-2 mb-2 flex-wrap">
+              {uploadedImages.map((url, i) => (
+                <div key={url} className="relative w-20 h-20 rounded-sm overflow-hidden border border-walnut/20 group">
+                  <Image src={url} alt={`Reference ${i + 1}`} fill className="object-cover" sizes="80px" />
+                  <button
+                    type="button"
+                    onClick={() => setUploadedImages((prev) => prev.filter((_, idx) => idx !== i))}
+                    className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/50 text-white rounded-full text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                    aria-label="Remove image"
+                  >
+                    ✕
+                  </button>
+                </div>
+              ))}
+              {uploadingCount > 0 && (
+                <div className="w-20 h-20 rounded-sm border border-walnut/15 bg-cream-soft flex items-center justify-center">
+                  <span className="text-xs text-charcoal/40 animate-pulse">Uploading…</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {uploadedImages.length < 3 && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                className="sr-only"
+                onChange={(e) => handleImageFiles(e.target.files)}
+                disabled={isSubmitting || uploadingCount > 0}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isSubmitting || uploadingCount > 0}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-charcoal/60 border border-walnut/20 bg-cream-soft hover:bg-cream rounded-sm px-4 py-2 transition-colors disabled:opacity-50"
+              >
+                <span>📎</span>
+                {uploadingCount > 0 ? "Uploading…" : "Add photos"}
+              </button>
+              <p className="text-[0.74rem] text-charcoal/40 mt-1.5">
+                Share inspiration images — Pinterest, WhatsApp screenshots, anything that shows what you have in mind.
+              </p>
+            </>
+          )}
+
+          {uploadError && (
+            <p className="text-[0.8rem] text-sienna-dark mt-1">{uploadError}</p>
+          )}
         </div>
 
         {/* Description */}

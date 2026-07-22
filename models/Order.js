@@ -146,6 +146,13 @@ const customDetailsSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // Inspiration / reference photos uploaded by the customer at inquiry
+    // time. Stored as Cloudinary URLs. Max 3 images enforced at the API.
+    referenceImages: {
+      type: [String],
+      default: [],
+    },
+
     // Production-confirmed measurements set by admin after the on-site
     // visit. Free-label key/value list so it works for any furniture type.
     confirmedMeasurements: {

@@ -3,6 +3,10 @@
 import { useState, useMemo, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+const ProductDetailModal  = dynamic(() => import("./ProductDetailModal"),  { ssr: false });
+const ReadyMadeOrderModal = dynamic(() => import("./ReadyMadeOrderModal"), { ssr: false });
 
 const CATEGORIES = [
   { value: "", label: "All" },
@@ -28,7 +32,7 @@ const SORT_OPTIONS = [
   { value: "name_asc", label: "Name: A – Z" },
 ];
 
-function ProductTile({ product }) {
+function ProductTile({ product, onView, onOrder }) {
   const images = product.images || [];
   const [imgIndex, setImgIndex] = useState(0);
   const price = product.priceMin
@@ -36,19 +40,22 @@ function ProductTile({ product }) {
     : null;
 
   const prev = useCallback((e) => {
-    e.preventDefault();
+    e.stopPropagation();
     setImgIndex((i) => (i - 1 + images.length) % images.length);
   }, [images.length]);
 
   const next = useCallback((e) => {
-    e.preventDefault();
+    e.stopPropagation();
     setImgIndex((i) => (i + 1) % images.length);
   }, [images.length]);
 
   const currentImage = images[imgIndex]?.url;
 
   return (
-    <div className="group bg-white border border-walnut/10 rounded-sm overflow-hidden hover:shadow-md transition-shadow duration-300">
+    <div
+      className="group bg-white border border-walnut/10 rounded-sm overflow-hidden hover:shadow-md transition-shadow duration-300 cursor-pointer"
+      onClick={() => onView(product)}
+    >
       <div className="relative h-56 bg-cream overflow-hidden">
         {currentImage ? (
           <Image
@@ -85,7 +92,7 @@ function ProductTile({ product }) {
               {images.map((_, i) => (
                 <button
                   key={i}
-                  onClick={(e) => { e.preventDefault(); setImgIndex(i); }}
+                  onClick={(e) => { e.stopPropagation(); setImgIndex(i); }}
                   className={`w-1.5 h-1.5 rounded-full transition-all ${i === imgIndex ? "bg-white scale-125" : "bg-white/50"}`}
                   aria-label={`Image ${i + 1}`}
                 />
@@ -114,16 +121,26 @@ function ProductTile({ product }) {
             {product.description}
           </p>
         )}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2 justify-between">
           {price && (
             <span className="text-sm font-semibold text-walnut">{price}</span>
           )}
-          <Link
-            href={`/custom?reference=${product._id}`}
-            className="ml-auto text-xs font-semibold text-sienna hover:text-sienna-dark border border-sienna/30 hover:border-sienna px-3 py-1.5 rounded-sm transition-colors duration-150"
-          >
-            Inquire
-          </Link>
+          <div className="flex gap-2 ml-auto" onClick={(e) => e.stopPropagation()}>
+            {product.listingType === "ready_made" && product.stockQuantity > 0 && (
+              <button
+                onClick={() => onOrder(product)}
+                className="text-xs font-semibold text-cream-soft bg-sienna hover:bg-sienna-dark px-3 py-1.5 rounded-sm transition-colors duration-150"
+              >
+                Order
+              </button>
+            )}
+            <button
+              onClick={() => onView(product)}
+              className="text-xs font-semibold text-sienna hover:text-sienna-dark border border-sienna/30 hover:border-sienna px-3 py-1.5 rounded-sm transition-colors duration-150"
+            >
+              View
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -131,9 +148,11 @@ function ProductTile({ product }) {
 }
 
 export default function CatalogClient({ products }) {
-  const [activeCategory, setActiveCategory] = useState("");
-  const [priceRange, setPriceRange]         = useState("");
-  const [sort, setSort]                     = useState("default");
+  const [activeCategory, setActiveCategory]           = useState("");
+  const [priceRange, setPriceRange]                   = useState("");
+  const [sort, setSort]                               = useState("default");
+  const [detailProduct, setDetailProduct]             = useState(null);
+  const [orderProduct, setOrderProduct]               = useState(null);
 
   const filtered = useMemo(() => {
     let result = [...products];
@@ -272,9 +291,35 @@ export default function CatalogClient({ products }) {
       {filtered.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filtered.map((product) => (
-            <ProductTile key={product._id} product={product} />
+            <ProductTile
+              key={product._id}
+              product={product}
+              onView={setDetailProduct}
+              onOrder={setOrderProduct}
+            />
           ))}
         </div>
+      )}
+
+      {/* Product detail modal */}
+      {detailProduct && (
+        <ProductDetailModal
+          product={detailProduct}
+          onClose={() => setDetailProduct(null)}
+          onOrder={(p) => { setDetailProduct(null); setOrderProduct(p); }}
+          onReference={(p) => {
+            setDetailProduct(null);
+            window.location.href = `/custom?reference=${p._id}`;
+          }}
+        />
+      )}
+
+      {/* Ready-made order modal */}
+      {orderProduct && (
+        <ReadyMadeOrderModal
+          product={orderProduct}
+          onClose={() => setOrderProduct(null)}
+        />
       )}
     </>
   );

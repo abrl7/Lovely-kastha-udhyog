@@ -21,6 +21,8 @@ export default function AdminOrdersPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [searchQuery, setSearchQuery]   = useState("");
   const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [page, setPage]                 = useState(1);
+  const PAGE_SIZE = 25;
 
   // Always fetch all orders — filtering and stats are done client-side.
   const fetchOrders = useCallback(async () => {
@@ -75,7 +77,11 @@ export default function AdminOrdersPage() {
   function handleStatusFilter(value) {
     setStatusFilter(value);
     setSelectedOrderId(null);
+    setPage(1);
   }
+
+  const pagedOrders  = useMemo(() => visibleOrders.slice(0, page * PAGE_SIZE), [visibleOrders, page]);
+  const hasMore      = visibleOrders.length > page * PAGE_SIZE;
 
   return (
     <div>
@@ -126,7 +132,7 @@ export default function AdminOrdersPage() {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); setSelectedOrderId(null); }}
+            onChange={(e) => { setSearchQuery(e.target.value); setSelectedOrderId(null); setPage(1); }}
             placeholder="Name, phone, or order code…"
             className="w-full pl-8 pr-3 py-1.5 border border-walnut/20 bg-white rounded-sm text-sm text-charcoal focus:outline-2 focus:outline-sienna"
           />
@@ -216,7 +222,7 @@ export default function AdminOrdersPage() {
           )}
 
           <div className="flex flex-col gap-3">
-            {visibleOrders.map((order) => (
+            {pagedOrders.map((order) => (
               <OrderCard
                 key={order._id}
                 order={order}
@@ -227,6 +233,17 @@ export default function AdminOrdersPage() {
               />
             ))}
           </div>
+
+          {hasMore && (
+            <div className="mt-4 text-center">
+              <button
+                onClick={() => setPage((p) => p + 1)}
+                className="text-sm font-semibold text-sienna hover:text-sienna-dark border border-sienna/30 rounded-sm px-5 py-2 hover:bg-sienna/5 transition-colors"
+              >
+                Load more ({visibleOrders.length - pagedOrders.length} remaining)
+              </button>
+            </div>
+          )}
         </div>
 
         {selectedOrder && (

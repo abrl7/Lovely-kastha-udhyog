@@ -7,8 +7,9 @@ import InquiryForm from "./InquiryForm";
 // Holds the selectedReference state that needs to be shared between
 // ReferenceGrid (writes it) and InquiryForm (reads it). Both are client
 // components so they must live under a common client parent — this is it.
-export default function CustomOrderClient({ products }) {
-  const [selectedReference, setSelectedReference] = useState(null);
+// initialReference: product object pre-populated from URL ?reference=<id>
+export default function CustomOrderClient({ products, initialReference = null }) {
+  const [selectedReference, setSelectedReference] = useState(initialReference);
 
   return (
     <>

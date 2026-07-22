@@ -16,11 +16,18 @@ export const metadata = {
   },
 };
 
-export default async function CustomPage() {
+export default async function CustomPage({ searchParams }) {
   // Show ALL active products (ready-made AND reference-only) as
   // inspiration pieces so a customer arriving from the catalog can
   // still see and select the item they came from.
   const allProducts = await getAllActiveProducts();
+
+  // Pre-select a reference product if ?reference=<id> is in the URL.
+  // The catalog's "Use as Reference" button and the detail modal both link here.
+  const referenceId = searchParams?.reference || null;
+  const initialReference = referenceId
+    ? (allProducts.find((p) => String(p._id) === String(referenceId)) ?? null)
+    : null;
 
   return (
     <main>
@@ -42,7 +49,7 @@ export default async function CustomPage() {
         </div>
       </div>
 
-      <CustomOrderClient products={allProducts} />
+      <CustomOrderClient products={allProducts} initialReference={initialReference} />
 
       <Footer />
     </main>

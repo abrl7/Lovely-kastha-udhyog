@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/mongodb";
 import Order from "@/models/Order";
 import Product from "@/models/Product"; // required for populate() to work
 import { getCurrentAdmin } from "@/lib/getCurrentAdmin";
+import { sendStatusUpdateEmail } from "@/lib/email";
 
 /*
   [id] in the folder name is Next.js dynamic route syntax. This file
@@ -115,6 +116,8 @@ export async function PATCH(request, { params }) {
       );
     }
 
+    const previousStatus = order.status;
+
     if (status !== undefined) order.status = status;
     if (internalNotes !== undefined) order.internalNotes = internalNotes;
     if (agreedPrice !== undefined) {
@@ -132,6 +135,16 @@ export async function PATCH(request, { params }) {
     }
 
     await order.save(); // triggers pre('save') hook for statusHistory
+
+    // Send email if status changed and customer provided an email address
+    if (status !== undefined && status !== previousStatus && order.customerEmail) {
+      await sendStatusUpdateEmail({
+        customerEmail: order.customerEmail,
+        customerName:  order.customerName,
+        orderCode:     order.orderCode,
+        status:        order.status,
+      });
+    }
 
     return NextResponse.json({ success: true, data: order });
   } catch (error) {

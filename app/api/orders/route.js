@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import mongoose from "mongoose";
 import { connectDB } from "@/lib/mongodb";
 import Order from "@/models/Order";
 import Product from "@/models/Product";
@@ -125,6 +126,10 @@ export async function POST(request) {
         );
       }
 
+      const rawImages = Array.isArray(customDetails.referenceImages)
+        ? customDetails.referenceImages.filter((u) => typeof u === "string").slice(0, 3)
+        : [];
+
       orderData.customDetails = {
         referenceProduct: customDetails.referenceProduct || null,
         furnitureType:    customDetails.furnitureType    || "other",
@@ -132,6 +137,7 @@ export async function POST(request) {
         dimensions:       customDetails.dimensions       || "",
         woodPreference:   customDetails.woodPreference   || "",
         budgetRange:      customDetails.budgetRange      || "",
+        referenceImages:  rawImages,
       };
     }
 
@@ -139,33 +145,40 @@ export async function POST(request) {
     // the document, to keep the "count existing orders this year" window
     // as small as possible (reduces — doesn't eliminate — the race
     // condition described in generateOrderCode.js).
-    // Retry up to 3 times on duplicate orderCode — handles the rare race
-    // condition where two simultaneous requests generate the same code.
+    // Use a MongoDB transaction for ready_made orders so the order
+    // document and the stock decrement succeed or fail together. A crash
+    // between the two steps previously left stock incorrect; the transaction
+    // prevents that. Custom orders don't touch stock so no session needed.
     let order;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      orderData.orderCode = await generateOrderCode();
-      try {
-        order = await Order.create(orderData);
-        break;
-      } catch (err) {
-        if (err.code === 11000 && err.keyPattern?.orderCode && attempt < 2) {
-          continue; // regenerate and retry
-        }
-        throw err; // non-duplicate error or exhausted retries
-      }
-    }
 
-    // If this was a ready-made purchase, decrement stock. In a
-    // high-traffic store you'd want this to happen atomically together
-    // with the order creation (a "transaction") so a crash between the
-    // two steps can't leave stock incorrect. At this stage/scale, doing
-    // it as a clearly separate, sequential step is simpler to read and
-    // reason about — worth revisiting if this ever needs to handle many
-    // simultaneous orders for the same limited-stock item.
     if (orderType === "ready_made") {
-      await Product.findByIdAndUpdate(orderData.product, {
-        $inc: { stockQuantity: -orderData.quantity },
-      });
+      const session = await mongoose.startSession();
+      try {
+        await session.withTransaction(async () => {
+          orderData.orderCode = await generateOrderCode();
+          const [created] = await Order.create([orderData], { session });
+          order = created;
+          await Product.findByIdAndUpdate(
+            orderData.product,
+            { $inc: { stockQuantity: -orderData.quantity } },
+            { session }
+          );
+        });
+      } finally {
+        session.endSession();
+      }
+    } else {
+      // Custom orders: simple retry loop for duplicate orderCode only
+      for (let attempt = 0; attempt < 3; attempt++) {
+        orderData.orderCode = await generateOrderCode();
+        try {
+          order = await Order.create(orderData);
+          break;
+        } catch (err) {
+          if (err.code === 11000 && err.keyPattern?.orderCode && attempt < 2) continue;
+          throw err;
+        }
+      }
     }
 
     return NextResponse.json(

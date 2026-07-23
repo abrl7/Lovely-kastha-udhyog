@@ -231,6 +231,22 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
                 {order.customDetails.referenceProduct?.name || "—"}
               </p>
             )}
+            {order.customDetails?.referenceImages?.length > 0 && (
+              <div className="mt-2">
+                <p className="font-medium mb-1.5">Customer photos:</p>
+                <div className="flex flex-wrap gap-2">
+                  {order.customDetails.referenceImages.map((url, i) => (
+                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block">
+                      <img
+                        src={url}
+                        alt={`Reference ${i + 1}`}
+                        className="w-20 h-20 object-cover rounded-sm border border-walnut/15 hover:opacity-80 transition-opacity"
+                      />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <p className="text-sm text-charcoal/80">

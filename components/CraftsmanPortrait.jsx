@@ -10,7 +10,7 @@ import { useInView } from "@/hooks/useInView";
 // 4. Replace the value of PHOTO_URL below with that URL
 // ───────────────────────────────────────────────────────────────────────────
 const PHOTO_URL =
-  "https://scontent.fpkr1-1.fna.fbcdn.net/v/t1.6435-9/103132522_2847059282082505_7897278179155157914_n.jpg?stp=dst-jpg_tt6&cstp=mx960x720&ctp=s960x720&_nc_cat=104&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeGD6Y7t7-fP-ZHXW7BPOUC2FXh1HWie4_gVeHUdaJ7j-EmEO5TytVRYCqTeoFCaEmFGsOKcJvd5P_uts_319pE8&_nc_ohc=ghvcGPKbryYQ7kNvwEcuQZ_&_nc_oc=Ado7p0qLP9761QYC-39VW75T86rO_o4dbGBLUItz86TFaCtdwRFITbElYPXyqti_MAl9D6LdNTjzVCiBeFE2lMH2&_nc_zt=23&_nc_ht=scontent.fpkr1-1.fna&_nc_gid=-z4-JJjBhOd-7lsC30540w&_nc_ss=7b2a8&oh=00_AQBfu_fumW1av2JwJJMEqc8OFdIL0GsoWaUVHA_9l4TJ5Q&oe=6A892807";
+  "https://res.cloudinary.com/zzeoix4s/image/upload/v1784788322/103132522_2847059282082505_7897278179155157914_n_ly6x2l.jpg";
 
 // NOTE: The current URL is from Facebook CDN which caps at 960×720.
 // For best quality, upload the photo to Cloudinary and replace PHOTO_URL.

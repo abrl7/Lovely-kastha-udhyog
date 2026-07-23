@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import FadeIn from "./FadeIn";
 
 // Grid layout classes for up to 4 products in the asymmetric layout.
 // On mobile: simple full-width stacked cards. On md+: asymmetric grid.
@@ -51,44 +52,50 @@ export default function Featured({ products = [] }) {
 
   return (
     <section id="featured" className="py-[6.5rem] px-[6vw]">
-      <div className="max-w-[620px] mb-[3.5rem]">
+      <FadeIn direction="up" className="max-w-[620px] mb-[3.5rem]">
         <span className="text-[0.72rem] font-semibold tracking-[0.18em] uppercase text-sienna">
           From the Workshop
         </span>
         <h2 className="font-serif font-medium text-[clamp(1.9rem,3.4vw,2.7rem)] text-walnut-deep mt-[0.6rem]">
           Recently made, recently loved
         </h2>
-      </div>
+      </FadeIn>
 
-      <div className="grid grid-cols-6 gap-[1.2rem]">
+      <FadeIn direction="in" delay="delay-100" className="grid grid-cols-6 gap-[1.2rem]">
         {items.map((item, i) => {
           const gridClass = GRID_CLASSES[i] || GRID_CLASSES[GRID_CLASSES.length - 1];
           // Ready-made items link to /catalog, reference items link to /custom
           const href = item.listingType === "ready_made" ? "/catalog" : "/custom";
 
           const inner = (
-            <div className={`group relative overflow-hidden rounded-sm w-full h-full`}>
+            <div className="group relative overflow-hidden rounded-sm w-full h-full">
               {item.img ? (
                 <Image
                   src={item.img}
                   alt={item.name}
                   fill
-                  className="object-cover transition-transform duration-[600ms] group-hover:scale-[1.06]"
+                  className="object-cover transition-transform duration-700 group-hover:scale-[1.08]"
                 />
               ) : (
                 <div className="w-full h-full bg-cream flex items-center justify-center">
                   <span className="text-charcoal/30 text-sm">No image yet</span>
                 </div>
               )}
-              <div className="absolute left-0 right-0 bottom-0 p-[1.2rem] bg-gradient-to-t from-[rgba(20,14,9,0.88)] to-transparent text-cream-soft">
-                <h4 className="font-serif font-medium text-[1.15rem]">
+
+              {/* Always-visible bottom bar */}
+              <div className="absolute left-0 right-0 bottom-0 p-[1.2rem] bg-gradient-to-t from-[rgba(20,14,9,0.90)] via-[rgba(20,14,9,0.4)] to-transparent text-cream-soft transition-all duration-500 group-hover:from-[rgba(20,14,9,0.97)]">
+                <h4 className="font-serif font-medium text-[1.15rem] translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
                   {item.name}
                 </h4>
                 {item.meta && (
-                  <p className="text-[0.82rem] text-brass mt-[0.15rem]">
+                  <p className="text-[0.82rem] text-brass mt-[0.15rem] translate-y-1 group-hover:translate-y-0 transition-transform duration-300 delay-75">
                     {item.meta}
                   </p>
                 )}
+                {/* CTA revealed on hover */}
+                <p className="mt-2 text-[0.78rem] font-semibold tracking-[0.06em] uppercase text-cream-soft/0 group-hover:text-cream-soft/80 transition-all duration-300 delay-100">
+                  {item.listingType === "ready_made" ? "View in catalog →" : "Use as reference →"}
+                </p>
               </div>
             </div>
           );
@@ -106,7 +113,7 @@ export default function Featured({ products = [] }) {
             </div>
           );
         })}
-      </div>
+      </FadeIn>
 
       {!useFallback && (
         <div className="mt-8 flex flex-col sm:flex-row gap-3">

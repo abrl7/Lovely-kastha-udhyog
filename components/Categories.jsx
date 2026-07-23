@@ -1,4 +1,5 @@
 import Image from "next/image";
+import FadeIn from "./FadeIn";
 
 const categories = [
   {
@@ -31,14 +32,14 @@ const categories = [
 export default function Categories() {
   return (
     <section id="categories" className="bg-cream py-[6.5rem] px-[6vw]">
-      <div className="max-w-[620px] mb-[3.5rem]">
+      <FadeIn direction="up" className="max-w-[620px] mb-[3.5rem]">
         <span className="text-[0.72rem] font-semibold tracking-[0.18em] uppercase text-sienna">
           Collections
         </span>
         <h2 className="font-serif font-medium text-[clamp(1.9rem,3.4vw,2.7rem)] text-walnut-deep mt-[0.6rem]">
           Furniture for every room you live in
         </h2>
-      </div>
+      </FadeIn>
       <div className="cat-scroll flex gap-[1.4rem] overflow-x-auto pb-[0.6rem]">
         {categories.map((cat) => (
           <div

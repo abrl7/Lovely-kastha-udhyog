@@ -11,7 +11,89 @@ body {
   color: #2B2620;
 }
 
-/* signature wood-grain divider band */
+/* ─── Scroll-reveal animations ──────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes fadeLeft {
+  from { opacity: 0; transform: translateX(-28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes fadeRight {
+  from { opacity: 0; transform: translateX(28px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.fade-up   { opacity: 0; }
+.fade-in   { opacity: 0; }
+.fade-left { opacity: 0; }
+.fade-right{ opacity: 0; }
+
+.fade-up.in-view   { animation: fadeUp   0.7s cubic-bezier(0.22,1,0.36,1) forwards; }
+.fade-in.in-view   { animation: fadeIn   0.6s ease forwards; }
+.fade-left.in-view { animation: fadeLeft 0.7s cubic-bezier(0.22,1,0.36,1) forwards; }
+.fade-right.in-view{ animation: fadeRight 0.7s cubic-bezier(0.22,1,0.36,1) forwards; }
+
+/* Stagger helpers — add to children inside a FadeIn group */
+.delay-100 { animation-delay: 0.1s !important; }
+.delay-200 { animation-delay: 0.2s !important; }
+.delay-300 { animation-delay: 0.3s !important; }
+.delay-400 { animation-delay: 0.4s !important; }
+.delay-500 { animation-delay: 0.5s !important; }
+.delay-600 { animation-delay: 0.6s !important; }
+
+/* ─── Grain-band marquee ─────────────────────────────────────────────────── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee 22s linear infinite;
+  will-change: transform;
+}
+.marquee-track:hover { animation-play-state: paused; }
+
+/* ─── Process connector line fill ───────────────────────────────────────── */
+@keyframes lineFill {
+  from { width: 0; }
+  to   { width: 100%; }
+}
+.line-fill { animation: lineFill 1.2s cubic-bezier(0.22,1,0.36,1) forwards; }
+
+/* ─── WhatsApp pulse ring ────────────────────────────────────────────────── */
+@keyframes pulseRing {
+  0%   { transform: scale(1);   opacity: 0.6; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+.wa-ring {
+  animation: pulseRing 2s ease-out infinite;
+}
+
+/* ─── Hero fade on mount ─────────────────────────────────────────────────── */
+@keyframes heroReveal {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.hero-line {
+  opacity: 0;
+  animation: heroReveal 0.9s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+
+/* ─── Page fade-in on mount ─────────────────────────────────────────────── */
+@keyframes pageFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-enter {
+  animation: pageFade 0.5s ease forwards;
+}
+
+/* ─── signature wood-grain divider band ─────────────────────────────────── */
 .grain-band {
   background-image: repeating-linear-gradient(
     90deg,
@@ -24,7 +106,7 @@ body {
   );
 }
 
-/* horizontal category scroller */
+/* ─── horizontal category scroller ──────────────────────────────────────── */
 .cat-scroll {
   scroll-snap-type: x mandatory;
 }
@@ -40,9 +122,18 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  .marquee-track,
+  .wa-ring,
+  .hero-line,
+  .fade-up,
+  .fade-in,
+  .fade-left,
+  .fade-right {
     transition: none !important;
     animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
     scroll-behavior: auto !important;
   }
 }

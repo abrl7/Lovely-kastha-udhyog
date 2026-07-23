@@ -19,6 +19,7 @@ import GrainBand from "@/components/GrainBand";
 import Categories from "@/components/Categories";
 import Featured from "@/components/Featured";
 import Story from "@/components/Story";
+import CraftsmanPortrait from "@/components/CraftsmanPortrait";
 import Process from "@/components/Process";
 import Inquiry from "@/components/Inquiry";
 import Footer from "@/components/Footer";
@@ -31,13 +32,14 @@ export default async function HomePage() {
   const featuredProducts = await getFeaturedProducts();
 
   return (
-    <main>
+    <main className="page-enter">
       <Header />
       <Hero />
       <GrainBand />
       <Categories />
       <Featured products={featuredProducts} />
       <Story />
+      <CraftsmanPortrait />
       <Process />
       <Inquiry />
       <Footer />

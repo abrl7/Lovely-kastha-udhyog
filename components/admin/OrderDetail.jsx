@@ -127,6 +127,14 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
 
   return (
     <div className="bg-white border border-walnut/15 rounded-sm p-4 lg:p-6 h-fit lg:sticky lg:top-24">
+      {/* Mobile back link — hidden on lg where the list is always visible */}
+      <button
+        onClick={onClose}
+        className="lg:hidden flex items-center gap-1 text-xs font-semibold text-sienna mb-4"
+      >
+        ← Back to orders
+      </button>
+
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import OrderCard from "@/components/admin/OrderCard";
 import OrderDetail from "@/components/admin/OrderDetail";
 import { ORDER_STATUSES } from "@/lib/orderConstants";
@@ -22,7 +22,6 @@ export default function AdminOrdersPage() {
   const [searchQuery, setSearchQuery]   = useState("");
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [page, setPage]                 = useState(1);
-  const detailRef = useRef(null);
   const PAGE_SIZE = 25;
 
   // Always fetch all orders — filtering and stats are done client-side.
@@ -43,12 +42,11 @@ export default function AdminOrdersPage() {
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
 
-  // On mobile the detail panel is below the list — scroll to it when an order is selected.
+  // On mobile, selecting an order switches to detail view — scroll to top so the
+  // detail panel starts at the top of the viewport rather than at the bottom of the list.
   useEffect(() => {
-    if (selectedOrderId && detailRef.current) {
-      setTimeout(() => {
-        detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 50);
+    if (selectedOrderId) {
+      setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
     }
   }, [selectedOrderId]);
 
@@ -202,9 +200,11 @@ export default function AdminOrdersPage() {
         </p>
       )}
 
-      {/* Main layout: list left, detail panel right */}
+      {/* Main layout: list left, detail panel right.
+          On mobile, only one panel is visible at a time (master-detail pattern). */}
       <div className={`grid gap-6 ${selectedOrder ? "lg:grid-cols-[1fr_420px]" : "grid-cols-1"}`}>
-        <div>
+        {/* Order list — hidden on mobile when a detail is open */}
+        <div className={selectedOrder ? "hidden lg:block" : ""}>
           {error && (
             <p className="text-sm text-sienna-dark bg-sienna/10 border border-sienna/30 rounded-sm px-4 py-3 mb-4">
               {error}
@@ -257,17 +257,15 @@ export default function AdminOrdersPage() {
         </div>
 
         {selectedOrder && (
-          <div ref={detailRef} className="scroll-mt-4">
-            <OrderDetail
-              order={selectedOrder}
-              onClose={() => setSelectedOrderId(null)}
-              onUpdate={fetchOrders}
-              onDelete={() => {
-                setSelectedOrderId(null);
-                fetchOrders();
-              }}
-            />
-          </div>
+          <OrderDetail
+            order={selectedOrder}
+            onClose={() => setSelectedOrderId(null)}
+            onUpdate={fetchOrders}
+            onDelete={() => {
+              setSelectedOrderId(null);
+              fetchOrders();
+            }}
+          />
         )}
       </div>
     </div>

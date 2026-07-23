@@ -45,9 +45,11 @@ export default function Story() {
       {/* Image */}
       <FadeIn direction="left" className="relative h-[320px] md:h-[480px] rounded-sm overflow-hidden order-2 md:order-1">
         <Image
-          src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=700&q=80"
+          src="https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1400&q=90"
           alt="Furniture craftsmanship"
           fill
+          quality={92}
+          sizes="(max-width: 768px) 100vw, 50vw"
           className="object-cover saturate-[1.05]"
         />
         {/* Decorative corner frame */}

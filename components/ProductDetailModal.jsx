@@ -46,8 +46,9 @@ export default function ProductDetailModal({ product, onClose, onOrder, onRefere
                 src={images[imgIndex]}
                 alt={product.name}
                 fill
-                className="object-cover"
+                quality={92}
                 sizes="(max-width: 768px) 100vw, 50vw"
+                className="object-cover"
               />
 
               {images.length > 1 && (

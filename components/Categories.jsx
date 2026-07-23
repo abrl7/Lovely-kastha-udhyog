@@ -50,6 +50,8 @@ export default function Categories() {
               src={cat.img}
               alt={`${cat.name} wooden furniture`}
               fill
+              quality={90}
+              sizes="280px"
               className="object-cover transition-transform duration-500 group-hover:scale-[1.08]"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[rgba(20,14,9,0.85)] via-[rgba(20,14,9,0.1)] via-[55%] to-transparent" />

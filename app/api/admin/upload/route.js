@@ -90,7 +90,7 @@ export async function POST(request) {
             // Auto-format: Cloudinary serves WebP to browsers that support
             // it, JPEG as fallback — better compression automatically.
             { fetch_format: "auto" },
-            { quality: "auto" },
+            { quality: "auto:best" },
           ],
         },
         (error, result) => {

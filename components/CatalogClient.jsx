@@ -62,6 +62,8 @@ function ProductTile({ product, onView, onOrder }) {
             src={currentImage}
             alt={`${product.name} — image ${imgIndex + 1}`}
             fill
+            quality={90}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
             className="object-cover transition-transform duration-500 group-hover:scale-[1.05]"
           />
         ) : (

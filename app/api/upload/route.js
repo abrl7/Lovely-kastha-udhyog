@@ -52,7 +52,7 @@ export async function POST(request) {
           transformation: [
             { width: 1200, crop: "limit" },
             { fetch_format: "auto" },
-            { quality: "auto:good" },
+            { quality: "auto:best" },
           ],
         },
         (err, res) => (err ? reject(err) : resolve(res))

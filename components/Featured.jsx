@@ -74,6 +74,8 @@ export default function Featured({ products = [] }) {
                   src={item.img}
                   alt={item.name}
                   fill
+                  quality={90}
+                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   className="object-cover transition-transform duration-700 group-hover:scale-[1.08]"
                 />
               ) : (

@@ -190,7 +190,15 @@ export default function ProductForm({ mode, product, onClose, onSaved }) {
     "w-full px-3 py-2 border-[1.5px] border-walnut/20 bg-cream-soft rounded-sm text-sm text-charcoal focus:outline-2 focus:outline-sienna focus:border-sienna disabled:opacity-60";
 
   return (
-    <div className="bg-white border border-walnut/15 rounded-sm p-6 sticky top-24 max-h-[calc(100vh-7rem)] overflow-y-auto">
+    <div className="bg-white border border-walnut/15 rounded-sm p-4 lg:p-6 lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
+      {/* Mobile back link */}
+      <button
+        onClick={onClose}
+        className="lg:hidden flex items-center gap-1 text-xs font-semibold text-sienna mb-4"
+      >
+        ← Back to products
+      </button>
+
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <h2 className="font-serif text-lg text-walnut-deep">

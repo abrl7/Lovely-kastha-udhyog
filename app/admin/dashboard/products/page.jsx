@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import ProductCard from "@/components/admin/ProductCard";
 import ProductForm from "@/components/admin/ProductForm";
 
@@ -13,7 +13,6 @@ export default function AdminProductsPage() {
   // null = closed, 'add' = new product, 'edit' = editing existing
   const [formMode, setFormMode] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
-  const formRef = useRef(null);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -49,12 +48,10 @@ export default function AdminProductsPage() {
     setEditingProduct(null);
   }
 
-  // On mobile the form renders below the product list — scroll to it.
+  // On mobile, opening the form switches to form-only view — scroll to top.
   useEffect(() => {
-    if (formMode && formRef.current) {
-      setTimeout(() => {
-        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 50);
+    if (formMode) {
+      setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 50);
     }
   }, [formMode, editingProduct?._id]);
 
@@ -118,8 +115,8 @@ export default function AdminProductsPage() {
       )}
 
       <div className={`grid gap-6 ${formMode ? "lg:grid-cols-[1fr_460px]" : "grid-cols-1"}`}>
-        {/* Product list */}
-        <div>
+        {/* Product list — hidden on mobile when form is open */}
+        <div className={formMode ? "hidden lg:block" : ""}>
           {!loading && products.length === 0 && (
             <div className="bg-white border border-walnut/15 rounded-sm p-8 text-center">
               <p className="text-charcoal/50 text-sm mb-3">
@@ -179,14 +176,12 @@ export default function AdminProductsPage() {
 
         {/* Add / Edit form panel */}
         {formMode && (
-          <div ref={formRef} className="scroll-mt-4">
           <ProductForm
             mode={formMode}
             product={editingProduct}
             onClose={handleFormClose}
             onSaved={fetchProducts}
           />
-          </div>
         )}
       </div>
     </div>

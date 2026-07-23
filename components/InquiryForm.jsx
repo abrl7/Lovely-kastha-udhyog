@@ -83,6 +83,31 @@ export default function InquiryForm({ selectedReference, onClearReference }) {
     setFormData((prev) => ({ ...prev, [id]: value }));
   }
 
+  // Compress + resize an image client-side using Canvas before uploading.
+  // Phone photos are often 5–10MB; this brings them under 500KB while
+  // keeping them sharp enough for reference purposes.
+  function compressImage(file, maxWidth = 1200, quality = 0.82) {
+    return new Promise((resolve, reject) => {
+      const img = new window.Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width  = Math.round(img.width  * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(
+          (blob) => blob ? resolve(blob) : reject(new Error("Canvas toBlob failed")),
+          "image/jpeg",
+          quality
+        );
+      };
+      img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Image load failed")); };
+      img.src = objectUrl;
+    });
+  }
+
   async function handleImageFiles(files) {
     const remaining = 3 - uploadedImages.length;
     if (remaining <= 0) return;
@@ -92,13 +117,11 @@ export default function InquiryForm({ selectedReference, onClearReference }) {
     const results = await Promise.all(
       toUpload.map(async (file) => {
         if (!file.type.startsWith("image/")) return null;
-        if (file.size > 5 * 1024 * 1024) {
-          setUploadError("Images must be under 5MB each.");
-          return null;
-        }
-        const fd = new FormData();
-        fd.append("file", file);
         try {
+          // Compress first — keeps payload well under Vercel's 4.5MB limit
+          const compressed = await compressImage(file);
+          const fd = new FormData();
+          fd.append("file", compressed, file.name.replace(/\.[^.]+$/, ".jpg"));
           const res = await fetch("/api/upload", { method: "POST", body: fd });
           const data = await res.json();
           if (data.success) return data.data.url;

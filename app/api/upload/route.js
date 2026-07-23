@@ -34,9 +34,12 @@ export async function POST(request) {
       return NextResponse.json({ success: false, error: "File must be an image" }, { status: 400 });
     }
 
-    const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+    // 4MB hard limit — Vercel functions reject bodies over 4.5MB total.
+    // The client compresses before uploading so real-world payloads are
+    // well under this, but we keep a server-side check as a safety net.
+    const MAX_SIZE = 4 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      return NextResponse.json({ success: false, error: "Image must be under 5MB" }, { status: 400 });
+      return NextResponse.json({ success: false, error: "Image must be under 4MB" }, { status: 400 });
     }
 
     const cloudinary = configureCloudinary();

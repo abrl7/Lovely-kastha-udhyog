@@ -28,11 +28,11 @@ export default function ProductDetailModal({ product, onClose, onOrder, onRefere
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
       style={{ background: "rgba(46,32,23,0.6)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white rounded-sm shadow-2xl w-full max-w-3xl max-h-[92vh] overflow-y-auto">
+      <div className="bg-white rounded-t-sm sm:rounded-sm shadow-2xl w-full max-w-3xl max-h-[88vh] sm:max-h-[92vh] overflow-y-auto">
         {/* Close */}
         <div className="flex justify-end p-3 pb-0">
           <button onClick={onClose} className="text-charcoal/40 hover:text-charcoal text-xl w-8 h-8 flex items-center justify-center">✕</button>
@@ -98,7 +98,7 @@ export default function ProductDetailModal({ product, onClose, onOrder, onRefere
           </div>
 
           {/* Details */}
-          <div className="p-6 flex flex-col">
+          <div className="p-4 md:p-6 flex flex-col">
             <div className="mb-1">
               <p className="text-[0.7rem] font-semibold tracking-[0.15em] uppercase text-sienna">
                 {product.category || "Furniture"}

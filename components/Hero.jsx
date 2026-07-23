@@ -42,20 +42,20 @@ export default function Hero() {
 
         <h1 className="font-serif font-light leading-[1.05] mb-[1.6rem]">
           <span
-            className="hero-line block text-[clamp(2.6rem,6vw,4.6rem)]"
+            className="hero-line block text-[clamp(2rem,6vw,4.6rem)]"
             style={{ animationDelay: "0.25s" }}
           >
             Furniture built
           </span>
           <span
-            className="hero-line block text-[clamp(2.6rem,6vw,4.6rem)]"
+            className="hero-line block text-[clamp(2rem,6vw,4.6rem)]"
             style={{ animationDelay: "0.4s" }}
           >
             the way{" "}
             <em className="font-semibold text-brass not-italic">wood</em>
           </span>
           <span
-            className="hero-line block text-[clamp(2.6rem,6vw,4.6rem)]"
+            className="hero-line block text-[clamp(2rem,6vw,4.6rem)]"
             style={{ animationDelay: "0.55s" }}
           >
             wants to be built.

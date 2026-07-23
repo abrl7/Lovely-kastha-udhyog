@@ -21,6 +21,11 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://lovelykasthaUdhog.
 const SITE_NAME = "Lovely Kastha Udhog";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/images/og-default.jpg`;
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+};
+
 export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: {

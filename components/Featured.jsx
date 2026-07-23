@@ -51,7 +51,7 @@ export default function Featured({ products = [] }) {
       }));
 
   return (
-    <section id="featured" className="py-[6.5rem] px-[6vw]">
+    <section id="featured" className="py-[4rem] md:py-[6.5rem] px-[6vw]">
       <FadeIn direction="up" className="max-w-[620px] mb-[3.5rem]">
         <span className="text-[0.72rem] font-semibold tracking-[0.18em] uppercase text-sienna">
           From the Workshop

@@ -30,7 +30,7 @@ export default function Process() {
   const { ref: lineRef, inView: lineInView } = useInView({ threshold: 0.3 });
 
   return (
-    <section id="process" className="bg-cream-soft py-[6.5rem] px-[6vw]">
+    <section id="process" className="bg-cream-soft py-[4rem] md:py-[6.5rem] px-[6vw]">
       <FadeIn direction="up" className="max-w-[620px] mb-[3.5rem]">
         <span className="text-[0.72rem] font-semibold tracking-[0.18em] uppercase text-sienna">
           How It&apos;s Made

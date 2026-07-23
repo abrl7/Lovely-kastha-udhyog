@@ -85,8 +85,8 @@ export default function Header() {
 
       {/* Backdrop overlay */}
       <div
-        className={`fixed inset-0 z-[90] bg-walnut-deep/40 backdrop-blur-sm transition-opacity duration-300 md:hidden ${
-          isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+        className={`fixed inset-0 z-[90] bg-walnut-deep/40 transition-[opacity,visibility] duration-300 md:hidden ${
+          isOpen ? "opacity-100 visible pointer-events-auto" : "opacity-0 invisible pointer-events-none"
         }`}
         onClick={() => setIsOpen(false)}
         aria-hidden="true"
@@ -94,8 +94,10 @@ export default function Header() {
 
       {/* Mobile menu panel — slides down from header */}
       <nav
-        className={`fixed top-[73px] left-0 right-0 z-[95] bg-cream-soft border-b border-charcoal/10 shadow-lg transition-all duration-300 ease-in-out md:hidden ${
-          isOpen ? "translate-y-0 opacity-100" : "-translate-y-3 opacity-0 pointer-events-none"
+        className={`fixed top-[73px] left-0 right-0 z-[95] bg-cream-soft border-b border-charcoal/10 shadow-lg transition-[transform,opacity,visibility] duration-300 ease-in-out md:hidden ${
+          isOpen
+            ? "translate-y-0 opacity-100 visible pointer-events-auto"
+            : "-translate-y-3 opacity-0 invisible pointer-events-none"
         }`}
         aria-hidden={!isOpen}
       >

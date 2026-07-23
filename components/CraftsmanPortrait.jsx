@@ -21,7 +21,7 @@ export default function CraftsmanPortrait() {
   return (
     <section
       ref={ref}
-      className="relative min-h-[90vh] flex items-end overflow-hidden"
+      className="relative min-h-[65vh] md:min-h-[90vh] flex items-end overflow-hidden"
     >
       {/* Background photo via Next.js Image for proper optimization */}
       <div className="absolute inset-0">
@@ -42,9 +42,9 @@ export default function CraftsmanPortrait() {
       {/* Side vignette */}
       <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-transparent z-[1]" />
 
-      <div className="relative z-10 px-[6vw] py-[6rem] max-w-[800px]">
+      <div className="relative z-10 px-[6vw] py-[3.5rem] md:py-[6rem] max-w-[800px]">
         {/* Quote mark */}
-        <div className={`font-serif text-[6rem] text-brass/30 leading-none mb-[-1.5rem] fade-up ${inView ? "in-view" : ""}`}>
+        <div className={`font-serif text-[4rem] md:text-[6rem] text-brass/30 leading-none mb-[-1rem] md:mb-[-1.5rem] fade-up ${inView ? "in-view" : ""}`}>
           &ldquo;
         </div>
 

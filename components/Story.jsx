@@ -40,7 +40,7 @@ export default function Story() {
   return (
     <section
       id="story"
-      className="bg-walnut-deep text-cream grid md:grid-cols-2 items-center gap-16 py-[7rem] px-[6vw]"
+      className="bg-walnut-deep text-cream grid md:grid-cols-2 items-center gap-10 md:gap-16 py-[4rem] md:py-[7rem] px-[6vw]"
     >
       {/* Image */}
       <FadeIn direction="left" className="relative h-[320px] md:h-[480px] rounded-sm overflow-hidden order-2 md:order-1">

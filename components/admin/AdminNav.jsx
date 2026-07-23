@@ -28,15 +28,19 @@ export default function AdminNav({ adminName }) {
   }
 
   return (
-    <header className="bg-walnut-deep text-cream-soft px-6 md:px-10 py-4 flex items-center justify-between">
-      <div className="flex items-center gap-8">
-        <div>
-          <span className="font-serif text-lg">Lovely Kastha Udhog</span>
-          <span className="text-cream-soft/50 text-sm ml-2">Admin</span>
+    <header className="bg-walnut-deep text-cream-soft px-4 md:px-10 py-3 md:py-4 flex items-center justify-between gap-3">
+      {/* Logo + nav */}
+      <div className="flex items-center gap-3 md:gap-8 min-w-0">
+        <div className="shrink-0">
+          {/* Full name on md+, initials on mobile */}
+          <span className="font-serif text-base md:text-lg">
+            <span className="hidden md:inline">Lovely Kastha Udhog</span>
+            <span className="md:hidden">LKU</span>
+          </span>
+          <span className="text-cream-soft/50 text-xs md:text-sm ml-1 md:ml-2">Admin</span>
         </div>
         <nav className="flex gap-1">
           {NAV_LINKS.map((link) => {
-            // Mark active: exact match for Orders (so /products doesn't also highlight it)
             const isActive =
               link.href === "/admin/dashboard"
                 ? pathname === "/admin/dashboard"
@@ -57,16 +61,18 @@ export default function AdminNav({ adminName }) {
           })}
         </nav>
       </div>
-      <div className="flex items-center gap-4">
+
+      {/* Right side */}
+      <div className="flex items-center gap-2 md:gap-4 shrink-0">
         <span className="text-sm text-cream-soft/80 hidden sm:inline">
           Welcome, {adminName}
         </span>
         <button
           onClick={handleLogout}
           disabled={loggingOut}
-          className="text-sm font-semibold border border-cream-soft/30 rounded-sm px-4 py-1.5 hover:bg-cream-soft/10 transition-colors duration-200 disabled:opacity-60"
+          className="text-xs md:text-sm font-semibold border border-cream-soft/30 rounded-sm px-3 md:px-4 py-1.5 hover:bg-cream-soft/10 transition-colors duration-200 disabled:opacity-60 whitespace-nowrap"
         >
-          {loggingOut ? "Signing out..." : "Sign Out"}
+          {loggingOut ? "…" : "Sign Out"}
         </button>
       </div>
     </header>

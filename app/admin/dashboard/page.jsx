@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import OrderCard from "@/components/admin/OrderCard";
 import OrderDetail from "@/components/admin/OrderDetail";
 import { ORDER_STATUSES } from "@/lib/orderConstants";
@@ -22,6 +22,7 @@ export default function AdminOrdersPage() {
   const [searchQuery, setSearchQuery]   = useState("");
   const [selectedOrderId, setSelectedOrderId] = useState(null);
   const [page, setPage]                 = useState(1);
+  const detailRef = useRef(null);
   const PAGE_SIZE = 25;
 
   // Always fetch all orders — filtering and stats are done client-side.
@@ -41,6 +42,15 @@ export default function AdminOrdersPage() {
   }, []);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  // On mobile the detail panel is below the list — scroll to it when an order is selected.
+  useEffect(() => {
+    if (selectedOrderId && detailRef.current) {
+      setTimeout(() => {
+        detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+    }
+  }, [selectedOrderId]);
 
   // Counts per status for the stats bar — always from the full list.
   const statCounts = useMemo(() => {
@@ -247,15 +257,17 @@ export default function AdminOrdersPage() {
         </div>
 
         {selectedOrder && (
-          <OrderDetail
-            order={selectedOrder}
-            onClose={() => setSelectedOrderId(null)}
-            onUpdate={fetchOrders}
-            onDelete={() => {
-              setSelectedOrderId(null);
-              fetchOrders();
-            }}
-          />
+          <div ref={detailRef} className="scroll-mt-4">
+            <OrderDetail
+              order={selectedOrder}
+              onClose={() => setSelectedOrderId(null)}
+              onUpdate={fetchOrders}
+              onDelete={() => {
+                setSelectedOrderId(null);
+                fetchOrders();
+              }}
+            />
+          </div>
         )}
       </div>
     </div>

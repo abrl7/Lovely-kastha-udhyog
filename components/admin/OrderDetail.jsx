@@ -126,7 +126,7 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
   const fieldLabel = "block text-[0.72rem] font-semibold tracking-[0.04em] uppercase text-charcoal/50 mb-1";
 
   return (
-    <div className="bg-white border border-walnut/15 rounded-sm p-6 h-fit sticky top-24">
+    <div className="bg-white border border-walnut/15 rounded-sm p-4 lg:p-6 h-fit lg:sticky lg:top-24">
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
@@ -275,36 +275,38 @@ export default function OrderDetail({ order, onClose, onUpdate, onDelete }) {
 
           <div className="space-y-2 mb-2">
             {measurements.map((row, i) => (
-              <div key={i} className="flex gap-1.5 items-center">
+              <div key={i} className="flex flex-wrap gap-1.5 items-center">
                 <input
                   type="text"
                   value={row.label}
                   onChange={(e) => updateRow(i, "label", e.target.value)}
                   placeholder="e.g. Length"
-                  className="flex-1 min-w-0 px-2 py-1.5 border border-walnut/20 bg-cream-soft rounded-sm text-xs text-charcoal focus:outline-1 focus:outline-sienna"
+                  className="flex-1 min-w-[100px] px-2 py-1.5 border border-walnut/20 bg-cream-soft rounded-sm text-xs text-charcoal focus:outline-1 focus:outline-sienna"
                 />
-                <input
-                  type="text"
-                  value={row.value}
-                  onChange={(e) => updateRow(i, "value", e.target.value)}
-                  placeholder="e.g. 180"
-                  className="w-16 px-2 py-1.5 border border-walnut/20 bg-cream-soft rounded-sm text-xs text-charcoal focus:outline-1 focus:outline-sienna"
-                />
-                <select
-                  value={row.unit}
-                  onChange={(e) => updateRow(i, "unit", e.target.value)}
-                  className="w-14 px-1 py-1.5 border border-walnut/20 bg-cream-soft rounded-sm text-xs text-charcoal focus:outline-1 focus:outline-sienna"
-                >
-                  {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
-                </select>
-                <button
-                  type="button"
-                  onClick={() => removeRow(i)}
-                  className="text-charcoal/35 hover:text-red-500 text-sm leading-none px-1"
-                  aria-label="Remove row"
-                >
-                  ✕
-                </button>
+                <div className="flex gap-1.5 items-center">
+                  <input
+                    type="text"
+                    value={row.value}
+                    onChange={(e) => updateRow(i, "value", e.target.value)}
+                    placeholder="e.g. 180"
+                    className="w-16 px-2 py-1.5 border border-walnut/20 bg-cream-soft rounded-sm text-xs text-charcoal focus:outline-1 focus:outline-sienna"
+                  />
+                  <select
+                    value={row.unit}
+                    onChange={(e) => updateRow(i, "unit", e.target.value)}
+                    className="w-14 px-1 py-1.5 border border-walnut/20 bg-cream-soft rounded-sm text-xs text-charcoal focus:outline-1 focus:outline-sienna"
+                  >
+                    {UNITS.map((u) => <option key={u} value={u}>{u}</option>)}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => removeRow(i)}
+                    className="text-charcoal/35 hover:text-red-500 text-sm leading-none px-1"
+                    aria-label="Remove row"
+                  >
+                    ✕
+                  </button>
+                </div>
               </div>
             ))}
           </div>

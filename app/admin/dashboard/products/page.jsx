@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import ProductCard from "@/components/admin/ProductCard";
 import ProductForm from "@/components/admin/ProductForm";
 
@@ -13,6 +13,7 @@ export default function AdminProductsPage() {
   // null = closed, 'add' = new product, 'edit' = editing existing
   const [formMode, setFormMode] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
+  const formRef = useRef(null);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -47,6 +48,15 @@ export default function AdminProductsPage() {
     setFormMode(null);
     setEditingProduct(null);
   }
+
+  // On mobile the form renders below the product list — scroll to it.
+  useEffect(() => {
+    if (formMode && formRef.current) {
+      setTimeout(() => {
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 50);
+    }
+  }, [formMode, editingProduct?._id]);
 
   async function handleToggleActive(product) {
     try {
@@ -169,12 +179,14 @@ export default function AdminProductsPage() {
 
         {/* Add / Edit form panel */}
         {formMode && (
+          <div ref={formRef} className="scroll-mt-4">
           <ProductForm
             mode={formMode}
             product={editingProduct}
             onClose={handleFormClose}
             onSaved={fetchProducts}
           />
+          </div>
         )}
       </div>
     </div>

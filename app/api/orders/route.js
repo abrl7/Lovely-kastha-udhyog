@@ -5,6 +5,7 @@ import Order from "@/models/Order";
 import Product from "@/models/Product";
 import { generateOrderCode } from "@/lib/generateOrderCode";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { sendNewOrderNotification } from "@/lib/email";
 
 /*
   POST /api/orders
@@ -180,6 +181,9 @@ export async function POST(request) {
         }
       }
     }
+
+    // Fire-and-forget — don't await so the response isn't delayed
+    sendNewOrderNotification(order).catch(() => {});
 
     return NextResponse.json(
       { success: true, data: order },

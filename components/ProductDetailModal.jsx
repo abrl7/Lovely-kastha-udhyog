@@ -5,6 +5,7 @@ import Image from "next/image";
 
 export default function ProductDetailModal({ product, onClose, onOrder, onReference }) {
   const [imgIndex, setImgIndex] = useState(0);
+  const [lightbox, setLightbox] = useState(false);
   // images can be [{url, publicId}, ...] objects or plain strings
   const rawImages = product.images?.length ? product.images : [];
   const images = rawImages.length
@@ -28,7 +29,7 @@ export default function ProductDetailModal({ product, onClose, onOrder, onRefere
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-0 z-[110] flex items-end sm:items-center justify-center p-0 sm:p-4"
       style={{ background: "rgba(46,32,23,0.6)" }}
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
@@ -41,26 +42,38 @@ export default function ProductDetailModal({ product, onClose, onOrder, onRefere
         <div className="grid md:grid-cols-2 gap-0">
           {/* Image carousel */}
           <div className="relative bg-cream-soft">
-            <div className="aspect-square relative overflow-hidden">
-              <Image
-                src={images[imgIndex]}
-                alt={product.name}
-                fill
-                quality={92}
-                sizes="(max-width: 768px) 100vw, 50vw"
-                className="object-cover"
-              />
+            <div
+              className="aspect-square relative overflow-hidden bg-cream-soft cursor-zoom-in"
+              onClick={() => setLightbox(true)}
+              title="Click to enlarge"
+            >
+              {/* inset-4 gives padding so image never touches the edges;
+                  object-contain shows the full image centered, no cropping */}
+              <div className="absolute inset-4 sm:inset-6">
+                <Image
+                  src={images[imgIndex]}
+                  alt={product.name}
+                  fill
+                  quality={92}
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-contain"
+                />
+              </div>
+              {/* Enlarge hint */}
+              <div className="absolute bottom-2 right-2 bg-black/40 text-white text-[0.65rem] px-1.5 py-0.5 rounded-sm pointer-events-none select-none">
+                ⤢ enlarge
+              </div>
 
               {images.length > 1 && (
                 <>
                   <button
-                    onClick={prev}
+                    onClick={(e) => { e.stopPropagation(); prev(); }}
                     className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center text-walnut shadow-sm transition-all"
                   >
                     ‹
                   </button>
                   <button
-                    onClick={next}
+                    onClick={(e) => { e.stopPropagation(); next(); }}
                     className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-white/80 hover:bg-white rounded-full flex items-center justify-center text-walnut shadow-sm transition-all"
                   >
                     ›
@@ -70,7 +83,7 @@ export default function ProductDetailModal({ product, onClose, onOrder, onRefere
                     {images.map((_, idx) => (
                       <button
                         key={idx}
-                        onClick={() => setImgIndex(idx)}
+                        onClick={(e) => { e.stopPropagation(); setImgIndex(idx); }}
                         className={`w-1.5 h-1.5 rounded-full transition-all ${idx === imgIndex ? "bg-white w-3" : "bg-white/60"}`}
                       />
                     ))}
@@ -101,7 +114,7 @@ export default function ProductDetailModal({ product, onClose, onOrder, onRefere
           <div className="p-4 md:p-6 flex flex-col">
             <div className="mb-1">
               <p className="text-[0.7rem] font-semibold tracking-[0.15em] uppercase text-sienna">
-                {product.category || "Furniture"}
+                {(product.category || "Furniture").replace(/_/g, " ")}
               </p>
             </div>
             <h2 className="font-serif text-2xl text-walnut-deep mb-3 leading-snug">{product.name}</h2>
@@ -168,6 +181,58 @@ export default function ProductDetailModal({ product, onClose, onOrder, onRefere
           </div>
         </div>
       </div>
+
+      {/* Lightbox — outer modal is z-[110] (above nav z-[100]), so this z-[500] within that context wins everything */}
+      {lightbox && (
+        <div
+          className="fixed inset-0 z-[500] flex flex-col items-center justify-center p-8 sm:p-14 pt-14 sm:pt-16"
+          style={{ backgroundColor: "rgba(0,0,0,0.88)" }}
+          onClick={() => setLightbox(false)}
+        >
+          {/* Close button — always visible above the image */}
+          <button
+            className="absolute top-5 right-5 bg-white/15 hover:bg-white/30 text-white rounded-full w-10 h-10 flex items-center justify-center text-lg transition-colors"
+            onClick={() => setLightbox(false)}
+            aria-label="Close"
+          >
+            ✕
+          </button>
+
+          {/* Image fills the padded area */}
+          <div className="relative w-full h-full" onClick={(e) => e.stopPropagation()}>
+            <Image
+              src={images[imgIndex]}
+              alt={product.name}
+              fill
+              quality={95}
+              sizes="100vw"
+              className="object-contain"
+              priority
+            />
+          </div>
+
+          {/* Prev / Next */}
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); prev(); }}
+                className="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 hover:bg-white/25 rounded-full flex items-center justify-center text-white text-xl transition-colors"
+              >
+                ‹
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); next(); }}
+                className="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/10 hover:bg-white/25 rounded-full flex items-center justify-center text-white text-xl transition-colors"
+              >
+                ›
+              </button>
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 text-white/50 text-xs">
+                {imgIndex + 1} / {images.length}
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

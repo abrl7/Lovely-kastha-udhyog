@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import Image from "next/image";
+import ProductDetailModal from "@/components/ProductDetailModal";
 
 const CATEGORY_LABELS = {
   living_room: "Living Room",
@@ -15,6 +16,7 @@ const CATEGORY_LABELS = {
 function ReferenceCard({ product, isSelected, onSelect }) {
   const images = product.images || [];
   const [imgIndex, setImgIndex] = useState(0);
+  const [showModal, setShowModal] = useState(false);
 
   const prev = useCallback((e) => {
     e.stopPropagation();
@@ -36,15 +38,31 @@ function ReferenceCard({ product, isSelected, onSelect }) {
           : "border-walnut/10 hover:shadow-sm"
       }`}
     >
-      {/* Image area with carousel */}
-      <div className="relative h-52 bg-cream overflow-hidden">
+      {/* Image area with carousel — click opens detail modal */}
+      <div
+        className="relative h-52 bg-cream overflow-hidden cursor-pointer"
+        onClick={() => setShowModal(true)}
+      >
         {currentImage ? (
-          <Image
-            src={currentImage}
-            alt={`${product.name} — image ${imgIndex + 1}`}
-            fill
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.04]"
-          />
+          <>
+            {/* Blurred background fill — same image blurred to fill letterbox areas */}
+            <Image
+              src={currentImage}
+              alt=""
+              fill
+              quality={10}
+              sizes="300px"
+              aria-hidden="true"
+              className="object-cover scale-110 blur-2xl opacity-60"
+            />
+            {/* Main image — object-contain so the full photo is always visible */}
+            <Image
+              src={currentImage}
+              alt={`${product.name} — image ${imgIndex + 1}`}
+              fill
+              className="object-contain transition-transform duration-500 group-hover:scale-[1.03]"
+            />
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-charcoal/25 text-sm">No image</span>
@@ -126,6 +144,18 @@ function ReferenceCard({ product, isSelected, onSelect }) {
           {isSelected ? "Selected — fill form below ↓" : "Use as reference"}
         </button>
       </div>
+
+      {showModal && (
+        <ProductDetailModal
+          product={product}
+          onClose={() => setShowModal(false)}
+          onReference={() => {
+            setShowModal(false);
+            onSelect(product);
+            document.getElementById("inquiry")?.scrollIntoView({ behavior: "smooth" });
+          }}
+        />
+      )}
     </div>
   );
 }

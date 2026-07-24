@@ -58,14 +58,27 @@ function ProductTile({ product, onView, onOrder }) {
     >
       <div className="relative h-56 bg-cream overflow-hidden">
         {currentImage ? (
-          <Image
-            src={currentImage}
-            alt={`${product.name} — image ${imgIndex + 1}`}
-            fill
-            quality={90}
-            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.05]"
-          />
+          <>
+            {/* Blurred background — same image stretched + blurred to fill empty letterbox areas */}
+            <Image
+              src={currentImage}
+              alt=""
+              fill
+              quality={10}
+              sizes="300px"
+              aria-hidden="true"
+              className="object-cover scale-110 blur-2xl opacity-60"
+            />
+            {/* Main image — object-contain so the full photo is always visible */}
+            <Image
+              src={currentImage}
+              alt={`${product.name} — image ${imgIndex + 1}`}
+              fill
+              quality={90}
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+              className="object-contain transition-transform duration-500 group-hover:scale-[1.03]"
+            />
+          </>
         ) : (
           <div className="w-full h-full flex items-center justify-center">
             <span className="text-charcoal/25 text-sm">No image yet</span>
